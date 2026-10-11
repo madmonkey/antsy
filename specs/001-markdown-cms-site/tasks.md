@@ -53,11 +53,11 @@ description: "Task list for Markdown CMS Website"
 
 ### Application base
 
-- [ ] T016 [P] Implement `app/composables/useSupabase.ts` (client from public runtime config; throws a clear error if URL/key missing)
-- [ ] T017 [P] Implement `app/utils/markdown.ts`: `marked` + `marked-footnote` then `sanitize-html`; raw HTML discarded; links limited to http/https/mailto; images limited to http/https or `data:image/(png|jpeg|gif|webp);base64,...`; external links get `rel="noopener noreferrer"`
-- [ ] T018 [P] Write unit tests in `tests/unit/markdown.test.ts` for malicious samples (raw HTML, script, `javascript:` links, `data:image/svg+xml`, `data:text/html`, unsafe image URLs) and for correct rendering of headings, lists, quotes, code, tables and footnotes (SC-004, FR-016)
-- [ ] T019 [P] Create shared types in `app/types/index.ts` (Topic, Article, PreviewArticle) matching data-model.md
-- [ ] T020 Create `app/layouts/default.vue` and a loading / error state component `app/components/StateMessage.vue` (loading skeleton, friendly error with Retry; FR-014) and the not-found page `app/pages/[...slug].vue` with a link home
+- [X] T016 [P] Implement `app/composables/useSupabase.ts` (client from public runtime config; throws a clear error if URL/key missing)
+- [X] T017 [P] Implement `app/utils/markdown.ts`: `marked` + `marked-footnote` then `sanitize-html`; raw HTML discarded; links limited to http/https/mailto; images limited to http/https or `data:image/(png|jpeg|gif|webp);base64,...`; external links get `rel="noopener noreferrer"`
+- [X] T018 [P] Write unit tests in `tests/unit/markdown.test.ts` for malicious samples (raw HTML, script, `javascript:` links, `data:image/svg+xml`, `data:text/html`, unsafe image URLs) and for correct rendering of headings, lists, quotes, code, tables and footnotes (SC-004, FR-016)
+- [X] T019 [P] Create shared types in `app/types/index.ts` (Topic, Article, PreviewArticle) matching data-model.md
+- [X] T020 Create `app/layouts/default.vue` and a loading / error state component `app/components/StateMessage.vue` (loading skeleton, friendly error with Retry; FR-014) and the not-found page `app/pages/[...slug].vue` with a link home
 
 **Checkpoint**: Database matches Astro's baseline plus additive features, adoption is rehearsed, size limits are known, base app and sanitizer are ready.
 
