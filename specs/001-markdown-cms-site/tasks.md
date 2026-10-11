@@ -71,16 +71,16 @@ description: "Task list for Markdown CMS Website"
 
 ### Tests
 
-- [ ] T021 [P] [US1] Component test for the preview in `tests/component/RecentArticles.test.ts`: never more than 3; filter options only previewable topics; empty, loading and error states; non-previewable topic articles absent from the unfiltered list (spec scenarios 5-9, SC-001a)
-- [ ] T022 [P] [US1] Playwright test in `tests/e2e/reading.spec.ts`: home -> topic -> article within 3 clicks; inactive topic/article URL shows not-found; direct load of an article URL works; body is never requested by list queries
+- [X] T021 [P] [US1] Component test for the preview in `tests/component/RecentArticles.test.ts`: never more than 3; filter options only previewable topics; empty, loading and error states; non-previewable topic articles absent from the unfiltered list (spec scenarios 5-9, SC-001a)
+- [X] T022 [P] [US1] Playwright test in `tests/e2e/reading.spec.ts`: home -> topic -> article within 3 clicks; inactive topic/article URL shows not-found; direct load of an article URL works; body is never requested by list queries
 
 ### Implementation
 
-- [ ] T023 [P] [US1] Implement `app/composables/useTopics.ts`: topic list (id, name, slug, description; order name), preview filter options (`is_previewable = true`, order name)
-- [ ] T024 [P] [US1] Implement `app/composables/useArticles.ts`: topic-page list (id, title, slug, excerpt, published_at; order published_at desc), article by slug (with body and topic name/slug), landing preview (inner join `topics`, topic `is_previewable = true`, `published_at is not null`, optional topic slug, order published_at desc, **limit 3**, never `body`) per contracts/data-access.md
-- [ ] T025 [P] [US1] Create `app/components/ArticleBody.vue` rendering sanitized HTML via `app/utils/markdown.ts` with theme-token typography (headings, lists, quotes, code, tables, footnotes, images) readable in both appearances
-- [ ] T026 [US1] Create `app/components/RecentArticles.vue`: parallel load of filter options and newest 3, topic filter with clear control, title/topic/date/excerpt links, loading/empty/error states (contracts/ui-routes.md "Landing preview behavior"). Depends on T023, T024
-- [ ] T027 [US1] Create `app/pages/index.vue` (preview + active topic list), `app/pages/topics/[slug].vue` and `app/pages/articles/[slug].vue`; inactive, in-inactive-topic or missing -> not-found; set `<title>` and meta description per page (FR-023); data re-fetched in the browser after load (FR-024). Depends on T025, T026
+- [X] T023 [P] [US1] Implement `app/composables/useTopics.ts`: topic list (id, name, slug, description; order name), preview filter options (`is_previewable = true`, order name)
+- [X] T024 [P] [US1] Implement `app/composables/useArticles.ts`: topic-page list (id, title, slug, excerpt, published_at; order published_at desc), article by slug (with body and topic name/slug), landing preview (inner join `topics`, topic `is_previewable = true`, `published_at is not null`, optional topic slug, order published_at desc, **limit 3**, never `body`) per contracts/data-access.md
+- [X] T025 [P] [US1] Create `app/components/ArticleBody.vue` rendering sanitized HTML via `app/utils/markdown.ts` with theme-token typography (headings, lists, quotes, code, tables, footnotes, images) readable in both appearances
+- [X] T026 [US1] Create `app/components/RecentArticles.vue`: parallel load of filter options and newest 3, topic filter with clear control, title/topic/date/excerpt links, loading/empty/error states (contracts/ui-routes.md "Landing preview behavior"). Depends on T023, T024
+- [X] T027 [US1] Create `app/pages/index.vue` (preview + active topic list), `app/pages/topics/[slug].vue` and `app/pages/articles/[slug].vue`; inactive, in-inactive-topic or missing -> not-found; set `<title>` and meta description per page (FR-023); data re-fetched in the browser after load (FR-024). Depends on T025, T026
 
 **Checkpoint**: Public reading works; MVP.
 
@@ -135,7 +135,7 @@ description: "Task list for Markdown CMS Website"
 
 **Independent Test**: Domain loads over HTTPS; admin signs in and out there.
 
-- [ ] T044 [P] [US4] Create `.github/workflows/deploy-pages.yml`: triggers on push, `workflow_dispatch` and a daily schedule; install, run unit and component tests (e2e runs locally, not in CI), run `scripts/prerender-routes.mjs`, then `nuxt generate` with repository variables `NUXT_PUBLIC_SUPABASE_URL` and `NUXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; deploy to Pages only if every step succeeded
+- [ ] T044 [P] [US4] Create `.github/workflows/deploy-pages.yml`: triggers on push, `workflow_dispatch` and a daily schedule; install, run unit and component tests (e2e runs locally, not in CI), run `scripts/prerender-routes.mjs`, then `nuxt generate` with repository variables `NUXT_PUBLIC_SUPABASE_URL` and `NUXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; deploy to Pages only if every step succeeded. **Before first publish:** run `npm ci` and a full `nuxt generate` with the real env to confirm the clean install and build (lockfile changed after the vitest 5 upgrade); recheck `npm audit` (remaining findings are Nuxt dev tooling only)
 - [ ] T045 [P] [US4] Create `scripts/prerender-routes.mjs`: with the publishable key read active topic and article slugs (no bodies, one list query per table; keep the request count small to stay within free-tier limits) and write the route list consumed by `nitro.prerender.routes` in `nuxt.config.ts`; exit non-zero on any read error, rate-limit response or empty snapshot so the previous site stays published (FR-023); also ensure a `404.html` fallback is emitted
 - [ ] T046 [US4] Integration test `tests/integration/build-output.test.ts`: built files contain no secrets, correct base path, `lang="en-US"`, per-page titles and descriptions, `404.html` present (SC-007, FR-021); also run the route script against an unreachable URL and assert a non-zero exit (quickstart scenario 17)
 - [ ] T047 [US4] Document in `quickstart.md`/`README.md` the Pages setup, repository variables, custom domain steps (DNS record, `public/CNAME` added only once the domain is chosen, HTTPS, Redirect URL for the custom domain) and server-side abuse protection note (FR-006, FR-011, FR-017)
