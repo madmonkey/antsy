@@ -48,8 +48,8 @@ description: "Task list for Markdown CMS Website"
 
 ### Hosted gate
 
-- [ ] T014 Create a **new** Supabase project for this site, apply all migrations in order (SQL editor or `supabase db push`; do not apply `seed.sql`), create the administrator's Auth user and insert their `user_id` into `public.administrator_profiles`, set the Auth Site URL and Redirect URLs for local and custom-domain addresses. Depends on T013
-- [ ] T015 Create `scripts/size-spike.mjs` per research.md D6 and run it against the new project: sign in as an administrator, insert 1 MB, 5 MB and 7 MB bodies into an inactive test topic, read each back and compare length, delete them, report the largest passing size, any error status (e.g. 413) and the time `marked` + `sanitize-html` take on the 5 MB body. Record results in `research.md` D6; if 7 MB fails, lower the body cap in T008, FR-004b and the editor message. Depends on T014. **Gate for US3**
+- [X] T014 Create a **new** Supabase project for this site, apply all migrations in order (SQL editor or `supabase db push`; do not apply `seed.sql`), create the administrator's Auth user and insert their `user_id` into `public.administrator_profiles`, set the Auth Site URL and Redirect URLs for local and custom-domain addresses. Depends on T013
+- [X] T015 Create `scripts/size-spike.mjs` per research.md D6 and run it against the new project: sign in as an administrator, insert 1 MB, 5 MB and 7 MB bodies into an inactive test topic, read each back and compare length, delete them, report the largest passing size, any error status (e.g. 413) and the time `marked` + `sanitize-html` take on the 5 MB body. Record results in `research.md` D6; if 7 MB fails, lower the body cap in T008, FR-004b and the editor message. Depends on T014. **Gate for US3**
 
 ### Application base
 
