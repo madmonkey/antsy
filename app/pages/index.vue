@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { fetchTopics } from '~/composables/useTopics'
 
+definePageMeta({ wide: true })
 useSeoMeta({ title: 'Antsy Tek', description: 'Articles by Antsy Tek.' })
 
 const { data: topics, error, status, refresh } = await useAsyncData('topics', fetchTopics)
