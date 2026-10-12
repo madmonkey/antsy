@@ -15,18 +15,18 @@ vi.stubGlobal('useColorMode', () => mode)
 vi.stubGlobal('useAppConfig', () => ({ site: { name: 'Antsy Tek', get social() { return social.value } } }))
 
 const UButton = { props: ['ariaLabel'], template: '<button :aria-label="ariaLabel" @click="$emit(\'click\')"><slot /></button>' }
-const stubs = { UButton, UIcon: true, NuxtLink: { template: '<a><slot /></a>' }, ThemeToggle, SocialLinks }
+const stubs = { ClientOnly: { template: '<div><slot /></div>' }, UButton, UIcon: true, NuxtLink: { template: '<a><slot /></a>' }, ThemeToggle, SocialLinks }
 
 describe('ThemeToggle', () => {
   beforeEach(() => { mode.value = 'light'; mode.preference = 'system' })
 
   it('offers night mode in day mode and day mode in night mode, and stores the choice', async () => {
-    const w = mount(ThemeToggle, { global: { stubs: { UButton } } })
+    const w = mount(ThemeToggle, { global: { stubs: { UButton, ClientOnly: { template: '<div><slot /></div>' } } } })
     expect(w.get('button').attributes('aria-label')).toBe('Switch to night mode')
     await w.get('button').trigger('click')
     expect(mode.preference).toBe('dark')
     mode.value = 'dark'
-    const w2 = mount(ThemeToggle, { global: { stubs: { UButton } } })
+    const w2 = mount(ThemeToggle, { global: { stubs: { UButton, ClientOnly: { template: '<div><slot /></div>' } } } })
     expect(w2.get('button').attributes('aria-label')).toBe('Switch to day mode')
     await w2.get('button').trigger('click')
     expect(mode.preference).toBe('light')
