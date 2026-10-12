@@ -24,9 +24,12 @@ onNuxtReady(() => refresh()) // onMounted fires while hydrating, when refresh() 
       >
         <ul class="space-y-2">
           <li v-for="t in topics" :key="t.id" class="relative rounded-lg border border-default p-3 transition hover:bg-elevated">
-            <NuxtLink :to="`/topics/${t.slug}`" class="font-medium after:absolute after:inset-0">
-              {{ t.name }}
-            </NuxtLink>
+            <div class="flex items-center justify-between gap-2">
+              <NuxtLink :to="`/topics/${t.slug}`" class="font-medium after:absolute after:inset-0">
+                {{ t.name }}
+              </NuxtLink>
+              <UBadge :label="String(t.articleCount)" :aria-label="`${t.articleCount} articles`" color="neutral" variant="subtle" />
+            </div>
             <p v-if="t.description" class="mt-1 text-sm text-muted">
               {{ t.description }}
             </p>
