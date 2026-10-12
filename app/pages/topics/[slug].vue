@@ -4,13 +4,12 @@ import { fetchTopicArticles } from '~/composables/useArticles'
 
 const slug = useRoute().params.slug as string
 
-const asyncTopic = useAsyncData(`topic-${slug}`, async () => {
+const { data, error, refresh } = await useAsyncData(`topic-${slug}`, async () => {
   const topic = await fetchTopicBySlug(slug)
   return topic ? { topic, articles: await fetchTopicArticles(topic.id) } : null
 })
-onMounted(() => asyncTopic.refresh()) // before the await: after it the hook is not registered
-const { data, error, refresh } = await asyncTopic
 if (!error.value && !data.value) throw createError({ statusCode: 404, statusMessage: 'Topic not found', fatal: true })
+onMounted(() => refresh())
 
 useSeoMeta({
   title: () => data.value?.topic.name ?? 'Topic',
