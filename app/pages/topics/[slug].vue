@@ -20,6 +20,7 @@ const formatDate = (iso: string | null) => (iso ? new Date(iso).toLocaleDateStri
 </script>
 
 <template>
+  <div>
   <StateMessage :error="error?.message" @retry="refresh()">
     <div v-if="data" class="space-y-4">
       <h1 class="text-2xl font-bold">
@@ -46,4 +47,5 @@ const formatDate = (iso: string | null) => (iso ? new Date(iso).toLocaleDateStri
       </ul>
     </div>
   </StateMessage>
+  </div>
 </template>

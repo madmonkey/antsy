@@ -12,6 +12,7 @@ export default defineNuxtConfig({
   routeRules: { '/admin/**': { ssr: false } },
   colorMode: { preference: 'system' },
   app: {
+    pageTransition: { name: 'page', mode: 'out-in' },
     baseURL: process.env.NUXT_APP_BASE_URL || '/',
     head: {
       htmlAttrs: { lang: 'en-US' },

@@ -14,6 +14,7 @@ useSeoMeta({
 </script>
 
 <template>
+  <div>
   <StateMessage :error="error?.message" @retry="refresh()">
     <article v-if="article" class="space-y-4">
       <p class="text-sm text-muted">
@@ -30,4 +31,5 @@ useSeoMeta({
       <ArticleBody :markdown="article.body" />
     </article>
   </StateMessage>
+  </div>
 </template>
