@@ -9,7 +9,7 @@ const { site } = useAppConfig()
     <h2 id="about-heading" class="text-xl font-semibold">
       {{ props.title ?? 'About me' }}
     </h2>
-    <p class="text-sm text-muted">
+    <p class="whitespace-pre-line text-sm text-muted">
       {{ props.text ?? site.about }}
     </p>
   </section>
