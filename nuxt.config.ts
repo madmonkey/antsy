@@ -15,8 +15,8 @@ export default defineNuxtConfig({
     baseURL: process.env.NUXT_APP_BASE_URL || '/',
     head: {
       htmlAttrs: { lang: 'en-US' },
-      title: 'Antsy Tek',
-      meta: [{ name: 'description', content: 'Articles by Antsy Tek.' }]
+      title: 'Fuckery Detected',
+      meta: [{ name: 'description', content: 'Articles by Fuckery Detected.' }]
     }
   },
   runtimeConfig: {

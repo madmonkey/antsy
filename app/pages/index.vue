@@ -2,7 +2,7 @@
 import { fetchTopics } from '~/composables/useTopics'
 
 definePageMeta({ wide: true })
-useSeoMeta({ title: 'Antsy Tek', description: 'Articles by Antsy Tek.' })
+useSeoMeta({ title: 'Fuckery Detected', description: 'Articles by Fuckery Detected.' })
 
 const { data: topics, error, status, refresh } = await useAsyncData('topics', fetchTopics)
 // Static pages are built ahead of time; re-fetch so visitors see current content (FR-024).
