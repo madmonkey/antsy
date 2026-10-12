@@ -42,3 +42,18 @@ const options: sanitizeHtml.IOptions = {
 export function renderMarkdown(markdown: string): string {
   return sanitizeHtml(marked.parse(markdown, { async: false }), options)
 }
+
+const previewOptions: sanitizeHtml.IOptions = {
+  ...options,
+  allowedSchemesByTag: { img: ['http', 'https', 'data', 'embedded'] }
+}
+
+// Editor preview: sanitize the short text with `embedded:n` tokens, then substitute the editor's own
+// validated data URIs, so the large image data never goes through the sanitizer.
+export function renderPreview(markdown: string, images: { id: number, dataUri: string }[]): string {
+  const html = sanitizeHtml(marked.parse(markdown, { async: false }), previewOptions)
+  return html.replace(/src="embedded:(\d+)"/g, (_m, n: string) => {
+    const img = images.find(i => i.id === Number(n))
+    return img ? `src="${img.dataUri}"` : ''
+  })
+}

@@ -111,19 +111,19 @@ description: "Task list for Markdown CMS Website"
 
 ### Tests
 
-- [ ] T034 [P] [US3] Unit tests in `tests/unit/embed-image.test.ts`: accepts png/jpeg/gif/webp by magic bytes; rejects SVG and a script renamed `.png`; rejects > 1 MB per image and > 5 MB per article, measured on raw bytes before base64 (or the limits recorded by T015); correct messages
-- [ ] T035 [P] [US3] Unit tests in `tests/unit/slug-excerpt.test.ts`: slug generation from title/name, numeric-suffix suggestion on duplicates, excerpt <= 280 chars from Markdown without tokens
-- [ ] T036 [P] [US3] Component test `tests/component/MarkdownEditor.test.ts`: preview updates debounced by 300 ms; `embedded:n` tokens are replaced with data URIs only after sanitizing; a 5 MB article stays responsive (object-URL fallback if not, per research.md D6)
-- [ ] T037 [P] [US3] Playwright test `tests/e2e/admin-content.spec.ts`: create/edit/activate/deactivate topic and article, previewable toggle, delete topic with confirmation, failed save preserves the draft, slug refused after publish, duplicate slug suggestion
+- [X] T034 [P] [US3] Unit tests in `tests/unit/embed-image.test.ts`: accepts png/jpeg/gif/webp by magic bytes; rejects SVG and a script renamed `.png`; rejects > 1 MB per image and > 5 MB per article, measured on raw bytes before base64 (or the limits recorded by T015); correct messages
+- [X] T035 [P] [US3] Unit tests in `tests/unit/slug-excerpt.test.ts`: slug generation from title/name, numeric-suffix suggestion on duplicates, excerpt <= 280 chars from Markdown without tokens
+- [X] T036 [P] [US3] Component test `tests/component/MarkdownEditor.test.ts`: preview updates debounced by 300 ms; `embedded:n` tokens are replaced with data URIs only after sanitizing; a 5 MB article stays responsive (object-URL fallback if not, per research.md D6)
+- [X] T037 [P] [US3] Playwright test `tests/e2e/admin-content.spec.ts`: create/edit/activate/deactivate topic and article, previewable toggle, delete topic with confirmation, failed save preserves the draft, slug refused after publish, duplicate slug suggestion
 
 ### Implementation
 
-- [ ] T038 [P] [US3] Implement `app/utils/embed-image.ts`: magic-byte sniffing, size limits, `embedded:n` token map, expansion to data URIs on save, alt text handling
-- [ ] T039 [P] [US3] Implement `app/utils/excerpt.ts` (generated client-side, <= 280 chars) and slug helpers (`^[a-z0-9]+(?:-[a-z0-9]+)*$`, suffix suggestion)
-- [ ] T040 [US3] Create `app/components/MarkdownEditor.vue`: formatting helpers, paste/drop/select image embedding, alt-text edit, replace/remove, debounced (300 ms) sanitized preview using the same renderer as public pages. Depends on T038
-- [ ] T041 [US3] Create `app/pages/admin/topics.vue`: create/edit/activate, previewable toggle, delete with the confirmation "all its articles will be permanently deleted"; slug editable until published; field-level error messages from the error contract
-- [ ] T042 [US3] Create `app/pages/admin/articles/[id].vue` (`new` for create): topic select, title, slug, editor, activate toggle, save with last-write-wins (leave a `shortcut: last write wins, add a version check if concurrent admins appear` comment); failed saves keep the draft; expired session redirects with draft preserved. Depends on T039, T040
-- [ ] T043 [US3] Complete `app/pages/admin/index.vue`: topic and article lists including inactive, bodies omitted
+- [X] T038 [P] [US3] Implement `app/utils/embed-image.ts`: magic-byte sniffing, size limits, `embedded:n` token map, expansion to data URIs on save, alt text handling
+- [X] T039 [P] [US3] Implement `app/utils/excerpt.ts` (generated client-side, <= 280 chars) and slug helpers (`^[a-z0-9]+(?:-[a-z0-9]+)*$`, suffix suggestion)
+- [X] T040 [US3] Create `app/components/MarkdownEditor.vue`: formatting helpers, paste/drop/select image embedding, alt-text edit, replace/remove, debounced (300 ms) sanitized preview using the same renderer as public pages. Depends on T038
+- [X] T041 [US3] Create `app/pages/admin/topics.vue`: create/edit/activate, previewable toggle, delete with the confirmation "all its articles will be permanently deleted"; slug editable until published; field-level error messages from the error contract
+- [X] T042 [US3] Create `app/pages/admin/articles/[id].vue` (`new` for create): topic select, title, slug, editor, activate toggle, save with last-write-wins (leave a `shortcut: last write wins, add a version check if concurrent admins appear` comment); failed saves keep the draft; expired session redirects with draft preserved. Depends on T039, T040
+- [X] T043 [US3] Complete `app/pages/admin/index.vue`: topic and article lists including inactive, bodies omitted
 
 **Checkpoint**: Authoring works end to end.
 

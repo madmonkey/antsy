@@ -1,0 +1,134 @@
+<script setup lang="ts">
+import { onMounted, reactive, ref } from 'vue'
+import {
+  deleteArticle, getAdminArticle, listAdminTopics, saveArticle, type AdminTopic, type WriteFailure
+} from '~/composables/useAdminContent'
+import { collapseImages, expandImages, type EmbeddedImage } from '~/utils/embed-image'
+import { isValidSlug, makeExcerpt, slugify } from '~/utils/excerpt'
+
+definePageMeta({ layout: 'admin', middleware: 'admin' })
+useSeoMeta({ title: 'Article', robots: 'noindex' })
+
+const route = useRoute()
+const id = route.params.id === 'new' ? null : String(route.params.id)
+const draftKey = `admin-draft:${id ?? 'new'}`
+
+const topics = ref<AdminTopic[]>([])
+const form = reactive({ topic_id: '', title: '', slug: '', is_active: false })
+const body = ref('')
+const images = ref<EmbeddedImage[]>([])
+const published = ref(false)
+const slugTouched = ref(false)
+const state = ref<'loading' | 'ready' | 'missing' | 'error'>('loading')
+const failure = ref<WriteFailure | null>(null)
+const saved = ref(false)
+
+onMounted(async () => {
+  try {
+    topics.value = await listAdminTopics()
+    const draft = sessionStorage.getItem(draftKey)
+    if (draft) {
+      const d = JSON.parse(draft)
+      Object.assign(form, d.form)
+      body.value = d.body
+      images.value = d.images
+      published.value = d.published
+      slugTouched.value = true
+      sessionStorage.removeItem(draftKey)
+    } else if (id) {
+      const a = await getAdminArticle(id)
+      if (!a) { state.value = 'missing'; return }
+      Object.assign(form, { topic_id: a.topic_id, title: a.title, slug: a.slug, is_active: a.is_active })
+      const c = collapseImages(a.body)
+      body.value = c.body
+      images.value = c.images
+      published.value = !!a.published_at
+      slugTouched.value = true
+    } else {
+      form.topic_id = topics.value[0]?.id ?? ''
+    }
+    state.value = 'ready'
+  } catch {
+    state.value = 'error'
+  }
+})
+
+function onTitle() {
+  if (!slugTouched.value) form.slug = slugify(form.title)
+}
+
+async function fail(f: WriteFailure) {
+  failure.value = f
+  if (f.kind === 'session') {
+    sessionStorage.setItem(draftKey, JSON.stringify({ form, body: body.value, images: images.value, published: published.value }))
+    await navigateTo('/admin/login?ended=1')
+  }
+}
+
+async function save() {
+  saved.value = false
+  failure.value = null
+  form.title = form.title.trim()
+  if (!form.title) return fail({ kind: 'field', field: 'title', message: 'Enter a title.' })
+  if (!isValidSlug(form.slug)) return fail({ kind: 'field', field: 'slug', message: 'Use lowercase letters, numbers and single hyphens.' })
+  if (!body.value.trim()) return fail({ kind: 'field', field: 'body', message: 'Enter the article text.' })
+  if (!form.topic_id) return fail({ kind: 'other', message: 'Create a topic first.' })
+  // shortcut: last write wins, add a version check if concurrent admins appear
+  const f = await saveArticle(id, { ...form, excerpt: makeExcerpt(body.value), body: expandImages(body.value, images.value) })
+  if (f) return fail(f)
+  saved.value = true
+  if (!id) await navigateTo('/admin')
+}
+
+async function remove() {
+  if (!id || !confirm('Delete this article permanently?')) return
+  const f = await deleteArticle(id)
+  if (f) return fail(f)
+  await navigateTo('/admin')
+}
+
+const fieldError = (f: string) => (failure.value?.field === f ? failure.value.message : '')
+</script>
+
+<template>
+  <div class="space-y-4">
+    <h1 class="text-2xl font-bold">
+      {{ id ? 'Edit article' : 'New article' }}
+    </h1>
+    <p v-if="state === 'loading'">
+      Loading…
+    </p>
+    <p v-else-if="state === 'missing'" role="alert">
+      That article does not exist.
+    </p>
+    <p v-else-if="state === 'error'" role="alert" class="text-error">
+      The article could not be loaded. <NuxtLink :to="route.fullPath" class="underline">Retry</NuxtLink>
+    </p>
+    <form v-else class="space-y-3" data-test="article-form" @submit.prevent="save">
+      <label class="block">Topic
+        <select v-model="form.topic_id" class="block w-full rounded border border-default p-1" data-test="article-topic">
+          <option v-for="t in topics" :key="t.id" :value="t.id">{{ t.name }}</option>
+        </select>
+      </label>
+      <label class="block">Title
+        <input v-model="form.title" class="block w-full rounded border border-default p-1" data-test="article-title" @input="onTitle">
+      </label>
+      <p v-if="fieldError('title')" role="alert" class="text-error" data-test="error-title">{{ fieldError('title') }}</p>
+      <label class="block">Address (slug)
+        <input v-model="form.slug" class="block w-full rounded border border-default p-1" data-test="article-slug" @input="slugTouched = true">
+      </label>
+      <p v-if="published" class="text-sm">Published addresses are permanent.</p>
+      <p v-if="fieldError('slug')" role="alert" class="text-error" data-test="error-slug">{{ fieldError('slug') }}</p>
+      <MarkdownEditor v-model="body" v-model:images="images" />
+      <p v-if="fieldError('body')" role="alert" class="text-error" data-test="error-body">{{ fieldError('body') }}</p>
+      <label class="flex items-center gap-2"><input v-model="form.is_active" type="checkbox" data-test="article-active"> Active (visible to the public)</label>
+      <p v-if="failure && !failure.field" role="alert" class="text-error" data-test="error-form">{{ failure.message }}</p>
+      <p v-if="saved" role="status" data-test="saved">Saved.</p>
+      <div class="flex gap-2">
+        <UButton type="submit" label="Save article" data-test="article-save" />
+        <UButton v-if="id" label="Delete" variant="outline" color="error" @click="remove" />
+        <NuxtLink to="/admin" class="self-center underline">Back</NuxtLink>
+      </div>
+    </form>
+  </div>
+</template>

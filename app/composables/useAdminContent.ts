@@ -1,0 +1,83 @@
+import type { PostgrestError } from '@supabase/supabase-js'
+import { useSupabase } from '~/composables/useSupabase'
+import { suggestFreeSlug } from '~/utils/excerpt'
+import type { Article, Topic } from '~/types'
+
+export type AdminTopic = Omit<Topic, 'published_at'> & { published_at: string | null }
+export type AdminArticleRow = Pick<Article, 'id' | 'topic_id' | 'title' | 'slug' | 'is_active' | 'published_at'>
+
+export interface WriteFailure { kind: 'field' | 'session' | 'other', field?: 'name' | 'slug' | 'title' | 'body', message: string }
+
+// Maps database errors onto the error contract: field-level messages, or a lost session.
+export async function describeFailure(e: PostgrestError | { message: string, code?: string, status?: number }, table: 'topics' | 'content_items', slug?: string): Promise<WriteFailure> {
+  const code = 'code' in e ? e.code : undefined
+  const msg = e.message ?? ''
+  if (code === '42501' || code === 'PGRST301' || ('status' in e && (e.status === 401 || e.status === 403)) || /jwt/i.test(msg)) {
+    return { kind: 'session', message: 'Your session ended. Sign in again; your draft is kept.' }
+  }
+  if (/published addresses are permanent/i.test(msg)) {
+    return { kind: 'field', field: 'slug', message: 'Published addresses are permanent and cannot be changed.' }
+  }
+  if (code === '23505') {
+    if (/slug/i.test(msg)) {
+      const free = slug ? await freeSlug(slug) : ''
+      return { kind: 'field', field: 'slug', message: `That address is already used.${free ? ` Try "${free}".` : ''}` }
+    }
+    return { kind: 'field', field: 'name', message: 'That name is already used.' }
+  }
+  if (code === '23514' || code === '23502') {
+    if (/body/i.test(msg)) return { kind: 'field', field: 'body', message: 'The article text is empty or too large.' }
+    if (/slug/i.test(msg)) return { kind: 'field', field: 'slug', message: 'Use lowercase letters, numbers and single hyphens.' }
+    return { kind: 'field', field: table === 'topics' ? 'name' : 'title', message: 'A required value is blank or invalid.' }
+  }
+  return { kind: 'other', message: 'Saving failed. Your draft is kept; try again.' }
+}
+
+async function freeSlug(base: string) {
+  const sb = useSupabase()
+  const [a, t] = await Promise.all([
+    sb.from('content_items').select('slug').like('slug', `${base}%`),
+    sb.from('topics').select('slug').like('slug', `${base}%`)
+  ])
+  return suggestFreeSlug(base, [...(a.data ?? []), ...(t.data ?? [])].map(r => r.slug))
+}
+
+export async function listAdminTopics() {
+  const { data, error } = await useSupabase().from('topics').select('id, name, slug, description, is_active, is_previewable, published_at').order('name')
+  if (error) throw error
+  return data as AdminTopic[]
+}
+
+export async function listAdminArticles() {
+  const { data, error } = await useSupabase().from('content_items').select('id, topic_id, title, slug, is_active, published_at').order('title')
+  if (error) throw error
+  return data as AdminArticleRow[]
+}
+
+export async function getAdminArticle(id: string) {
+  const { data, error } = await useSupabase().from('content_items').select('*').eq('id', id).maybeSingle()
+  if (error) throw error
+  return data as Article | null
+}
+
+export async function saveTopic(id: string | null, fields: Pick<Topic, 'name' | 'slug' | 'description' | 'is_active' | 'is_previewable'>) {
+  const q = useSupabase().from('topics')
+  const { error } = id ? await q.update(fields).eq('id', id) : await q.insert(fields)
+  return error ? describeFailure(error, 'topics', fields.slug) : null
+}
+
+export async function deleteTopic(id: string) {
+  const { error } = await useSupabase().from('topics').delete().eq('id', id)
+  return error ? describeFailure(error, 'topics') : null
+}
+
+export async function saveArticle(id: string | null, fields: Pick<Article, 'topic_id' | 'title' | 'slug' | 'excerpt' | 'body' | 'is_active'>) {
+  const q = useSupabase().from('content_items')
+  const { error } = id ? await q.update(fields).eq('id', id) : await q.insert(fields)
+  return error ? describeFailure(error, 'content_items', fields.slug) : null
+}
+
+export async function deleteArticle(id: string) {
+  const { error } = await useSupabase().from('content_items').delete().eq('id', id)
+  return error ? describeFailure(error, 'content_items') : null
+}
