@@ -200,4 +200,5 @@ description: "Task list for Markdown CMS Website"
 
 - Commit after each task or logical group.
 - Marker semantics: `astro-safety.md` checklist is reviewer-owned; do not tick its items from here.
+- **Testing policy (owner decision, 2026-10-11):** local Supabase, Playwright e2e and the full-build integration test use too many resources, so they are no longer run during implementation. They stay in the repo and can be run on demand. During implementation run only typecheck, lint and fast unit/component tests; exhaustive end-to-end verification (quickstart scenarios, SC-001..014) happens on the live site. Tasks whose tests were written but not run locally are ticked with that understanding.
 
