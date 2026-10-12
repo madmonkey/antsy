@@ -1,8 +1,6 @@
 import type { Article, ArticleSummary, PreviewArticle } from '~/types'
 import { useSupabase } from '~/composables/useSupabase'
 
-const PREVIEW_LIMIT = 3
-
 // Lists never select `body`.
 export async function fetchTopicArticles(topicId: string) {
   const { data, error } = await useSupabase()
@@ -21,14 +19,14 @@ export async function fetchArticleBySlug(slug: string) {
   return data as unknown as (Pick<Article, 'id' | 'title' | 'slug' | 'excerpt' | 'body' | 'published_at'> & { topic: { name: string, slug: string } }) | null
 }
 
-export async function fetchPreviewArticles(topicSlug?: string) {
-  let query = useSupabase()
+export async function fetchPreviewArticles(count: number) {
+  const { data, error } = await useSupabase()
     .from('content_items')
     .select('id, title, slug, excerpt, published_at, topic:topics!inner(name, slug, is_previewable)')
     .eq('topics.is_previewable', true)
     .not('published_at', 'is', null)
-  if (topicSlug) query = query.eq('topics.slug', topicSlug)
-  const { data, error } = await query.order('published_at', { ascending: false }).limit(PREVIEW_LIMIT)
+    .order('published_at', { ascending: false })
+    .limit(Math.max(1, Math.floor(count)))
   if (error) throw error
   return data as unknown as PreviewArticle[]
 }

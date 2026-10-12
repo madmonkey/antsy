@@ -3,17 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import RecentArticles from '../../app/components/RecentArticles.vue'
 
 const fetchPreviewArticles = vi.fn()
-const fetchPreviewableTopics = vi.fn()
 vi.mock('~/composables/useArticles', () => ({ fetchPreviewArticles: (...a: unknown[]) => fetchPreviewArticles(...a) }))
-vi.mock('~/composables/useTopics', () => ({ fetchPreviewableTopics: () => fetchPreviewableTopics() }))
+vi.stubGlobal('useAppConfig', () => ({ site: { recentCount: 3 } }))
 
 const article = (n: number) => ({
   id: String(n), title: `Post ${n}`, slug: `post-${n}`, excerpt: `Excerpt ${n}`,
   published_at: '2026-01-01T00:00:00Z', topic: { name: 'Eng', slug: 'eng' }
 })
 
-const render = async () => {
+const render = async (props = {}) => {
   const w = mount(RecentArticles, {
+    props,
     global: { stubs: { NuxtLink: { props: ['to'], template: '<a :href="to"><slot /></a>' }, USkeleton: true, UButton: { template: '<button><slot />Retry</button>' } } }
   })
   await flushPromises()
@@ -21,40 +21,40 @@ const render = async () => {
 }
 
 describe('RecentArticles', () => {
-  beforeEach(() => {
-    fetchPreviewArticles.mockReset()
-    fetchPreviewableTopics.mockReset()
-  })
+  beforeEach(() => { fetchPreviewArticles.mockReset() })
 
-  it('shows what the query returns (the query itself caps at 3)', async () => {
-    fetchPreviewableTopics.mockResolvedValue([])
+  it('asks for the site default count and shows each article as a card with topic, date, title and excerpt', async () => {
     fetchPreviewArticles.mockResolvedValue([article(1), article(2), article(3)])
     const w = await render()
-    expect(w.findAll('[data-test=article]')).toHaveLength(3)
-    expect(fetchPreviewArticles).toHaveBeenCalledWith(undefined)
+    expect(fetchPreviewArticles).toHaveBeenCalledWith(3)
+    const cards = w.findAll('[data-test=article]')
+    expect(cards).toHaveLength(3)
+    expect(cards[0].text()).toContain('Post 1')
+    expect(cards[0].text()).toContain('Eng')
+    expect(cards[0].text()).toContain('Excerpt 1')
+    expect(cards[0].find('a[href="/articles/post-1"]').exists()).toBe(true)
+    expect(cards[0].find('a[href="/topics/eng"]').exists()).toBe(true)
   })
 
-  it('filter lists only the previewable topics and re-queries on select and clear', async () => {
-    fetchPreviewableTopics.mockResolvedValue([{ name: 'Eng', slug: 'eng' }])
+  it('uses the count prop and title when given', async () => {
+    fetchPreviewArticles.mockResolvedValue([article(1)])
+    const w = await render({ count: 6, title: 'Latest' })
+    expect(fetchPreviewArticles).toHaveBeenCalledWith(6)
+    expect(w.find('h2').text()).toBe('Latest')
+  })
+
+  it('has no topic selector', async () => {
     fetchPreviewArticles.mockResolvedValue([article(1)])
     const w = await render()
-    expect(w.findAll('option').map(o => o.text())).toEqual(['All topics', 'Eng'])
-    await w.find('[data-test=filter]').setValue('eng')
-    await flushPromises()
-    expect(fetchPreviewArticles).toHaveBeenLastCalledWith('eng')
-    await w.find('[data-test=clear]').trigger('click')
-    await flushPromises()
-    expect(fetchPreviewArticles).toHaveBeenLastCalledWith(undefined)
+    expect(w.find('select').exists()).toBe(false)
   })
 
   it('shows the empty state', async () => {
-    fetchPreviewableTopics.mockResolvedValue([])
     fetchPreviewArticles.mockResolvedValue([])
     expect((await render()).text()).toContain('No articles yet.')
   })
 
   it('shows an error with Retry, and retry reloads', async () => {
-    fetchPreviewableTopics.mockResolvedValue([])
     fetchPreviewArticles.mockRejectedValueOnce(new Error('boom')).mockResolvedValue([article(1)])
     const w = await render()
     expect(w.text()).toContain('boom')
@@ -64,7 +64,6 @@ describe('RecentArticles', () => {
   })
 
   it('shows a loading state before data arrives', () => {
-    fetchPreviewableTopics.mockReturnValue(new Promise(() => {}))
     fetchPreviewArticles.mockReturnValue(new Promise(() => {}))
     const w = mount(RecentArticles, { global: { stubs: { NuxtLink: true, USkeleton: true } } })
     expect(w.find('[aria-busy=true]').exists()).toBe(true)

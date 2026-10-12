@@ -25,10 +25,10 @@ A visitor opens the site without signing in, browses topics, opens an article, a
 3. **Given** a topic or article is inactive, **When** a visitor requests it by address, **Then** it is not shown and the visitor sees the not-found page, with no trace of its content in any listing.
 4. **Given** a visitor requests an address that does not exist, **When** the page loads, **Then** a friendly not-found page with a way back to the home page is shown.
 5. **Given** more than three active articles exist, **When** a visitor opens the landing page, **Then** a "Recent articles" preview shows the three most recently published active articles, newest first, each with title, topic, date, and a short excerpt linking to the full article.
-6. **Given** the recent-articles preview, **When** a visitor selects a topic filter, **Then** the preview shows only the three most recent active articles in that topic, and clearing the filter restores the unfiltered preview. The filter offers only topics designated as previewable.
+6. **Given** the recent-articles preview, **When** it is shown, **Then** it is a composable section of card-style previews of the most recent active articles from previewable topics, with a configurable count (default 3) and no topic selector.
 7. **Given** fewer than three matching active articles, **When** the preview is shown, **Then** only those articles appear; **Given** none match, **Then** a friendly empty message is shown.
-8. **Given** an article or its topic is inactive, **When** the preview is shown, **Then** that article never appears in it, and the topic filter only offers active topics.
-9. **Given** a topic is not designated as previewable (e.g., "Politics" while "Tech" and "Projects" are), **When** the landing page is shown, **Then** that topic is absent from the filter and none of its articles appear in the preview, though they remain readable on the topic's own pages.
+8. **Given** an article or its topic is inactive, **When** the preview is shown, **Then** that article never appears in it.
+9. **Given** a topic is not designated as previewable (e.g., "Politics" while "Tech" and "Projects" are), **When** the landing page is shown, **Then** none of its articles appear in the preview, though they remain readable on the topic's own pages.
 
 ---
 
@@ -146,8 +146,8 @@ Every public page has a header toolbar where visitors switch between day (light)
 ### Functional Requirements
 
 - **FR-001**: System MUST let anonymous visitors browse active topics and read active articles without an account.
-- **FR-001a**: The landing page MUST show a recent-articles preview of no more than three active articles, newest first, drawn only from active topics designated as previewable, which visitors can filter by a single previewable topic.
-- **FR-001b**: Administrators MUST be able to designate each topic as previewable or not; the designation affects only the landing-page preview and filter, not the topic's own pages or its articles' readability.
+- **FR-001a**: The landing page MUST show a composable recent-articles section of card-style previews, a configurable number of active articles (default 3), newest first, drawn only from active topics designated as previewable. It has no topic selector.
+- **FR-001b**: Administrators MUST be able to designate each topic as previewable or not; the designation affects only the landing-page preview, not the topic's own pages or its articles' readability.
 - **FR-002**: System MUST enforce visibility of inactive topics and articles at the data-access level, not only in the user interface.
 - **FR-003**: System MUST render article bodies from Markdown with consistent responsive styling for headings, lists, quotes, code blocks, tables, and footnotes.
 - **FR-004**: System MUST discard authored raw HTML and sanitize rendered output; images MUST be limited to safe web addresses or administrator-embedded images of allowed types. Any other image source MUST NOT render.
@@ -192,7 +192,7 @@ Every public page has a header toolbar where visitors switch between day (light)
 ### Measurable Outcomes
 
 - **SC-001**: A visitor can reach any active article from the home page in three clicks or fewer.
-- **SC-001a**: The landing-page preview never shows more than 3 articles, 0 inactive items, and 0 articles from non-previewable topics; applying or clearing a topic filter updates it in under 1 second.
+- **SC-001a**: The landing-page preview never shows more than the configured count of articles, 0 inactive items, and 0 articles from non-previewable topics.
 - **SC-002**: An administrator can create a topic and publish a first article in under 5 minutes.
 - **SC-003**: 100% of inactive topics and articles are inaccessible to anonymous visitors and non-approved users in verification tests.
 - **SC-004**: 100% of tested malicious Markdown samples (raw HTML, scripts, unsafe image addresses, disguised or vector image files) render without executing or showing unsafe content.
@@ -215,7 +215,7 @@ Every public page has a header toolbar where visitors switch between day (light)
 - The database structure keeps Astro's table and column names and rules as its baseline and adds the new features on top, so Astro can later adopt them with an additive migration. Administrators for this site are set up separately in its own project. Because the two projects are separate, topic names and addresses may repeat across sites.
 - The site has no fixed subject matter; it is defined entirely by the topics administrators create. (Confirmed by the owner.)
 - "Recent" means most recently published or created active articles; the exact ordering date follows the Astro reference unless planning finds a reason to differ.
-- Topics are not previewable by default until an administrator designates them; this applies to the unfiltered preview too, not only the filter.
+- Topics are not previewable by default until an administrator designates them; this applies to the preview.
 - Social account links are maintained by the owner as site configuration, not through the administrator editor, in v1; GitHub and Bluesky are the initial examples and others can be added the same way.
 - "Day/night filter" means a visitor-facing light/dark appearance switch, not a content filter.
 - The administrator area also honors the day/night choice.
