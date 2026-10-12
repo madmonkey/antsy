@@ -3,9 +3,10 @@ import { fetchTopics } from '~/composables/useTopics'
 
 useSeoMeta({ title: 'Antsy Tek', description: 'Articles by Antsy Tek.' })
 
-const { data: topics, error, status, refresh } = await useAsyncData('topics', fetchTopics)
+const asyncTopics = useAsyncData('topics', fetchTopics)
+onMounted(() => asyncTopics.refresh()) // before the await: after it the hook is not registered
+const { data: topics, error, status, refresh } = await asyncTopics
 // Static pages are built ahead of time; re-fetch so visitors see current content (FR-024).
-onMounted(() => refresh())
 </script>
 
 <template>

@@ -3,9 +3,10 @@ import { fetchArticleBySlug } from '~/composables/useArticles'
 
 const slug = useRoute().params.slug as string
 
-const { data: article, error, refresh } = await useAsyncData(`article-${slug}`, () => fetchArticleBySlug(slug))
+const asyncArticle = useAsyncData(`article-${slug}`, () => fetchArticleBySlug(slug))
+onMounted(() => asyncArticle.refresh()) // before the await: after it the hook is not registered
+const { data: article, error, refresh } = await asyncArticle
 if (!error.value && !article.value) throw createError({ statusCode: 404, statusMessage: 'Article not found', fatal: true })
-onMounted(() => refresh())
 
 useSeoMeta({
   title: () => article.value?.title ?? 'Article',
