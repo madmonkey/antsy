@@ -18,6 +18,8 @@ const form = reactive({ topic_id: '', title: '', slug: '', is_active: false })
 const body = ref('')
 const images = ref<EmbeddedImage[]>([])
 const published = ref(false)
+const publishedAt = ref<string | null>(null)
+const previewing = ref(false)
 const slugTouched = ref(false)
 const state = ref<'loading' | 'ready' | 'missing' | 'error'>('loading')
 const failure = ref<WriteFailure | null>(null)
@@ -43,6 +45,7 @@ onMounted(async () => {
       body.value = c.body
       images.value = c.images
       published.value = !!a.published_at
+      publishedAt.value = a.published_at
       slugTouched.value = true
     } else {
       form.topic_id = topics.value[0]?.id ?? ''
@@ -126,9 +129,22 @@ const fieldError = (f: string) => (failure.value?.field === f ? failure.value.me
       <p v-if="saved" role="status" data-test="saved">Saved.</p>
       <div class="flex gap-2">
         <UButton type="submit" label="Save article" data-test="article-save" />
+        <UButton label="Preview" variant="outline" data-test="article-preview" @click="previewing = true" />
         <UButton v-if="id" label="Delete" variant="outline" color="error" @click="remove" />
         <NuxtLink to="/admin" class="self-center underline">Back</NuxtLink>
       </div>
     </form>
+    <UModal v-model:open="previewing" title="Preview" description="How this article will look when published." :ui="{ content: 'max-w-3xl' }">
+      <template #body>
+        <ArticleView
+          preview
+          :title="form.title || 'Untitled'"
+          :body="body"
+          :images="images"
+          :topic="topics.find(t => t.id === form.topic_id) ?? { name: '', slug: '' }"
+          :published-at="publishedAt ?? new Date().toISOString()"
+        />
+      </template>
+    </UModal>
   </div>
 </template>

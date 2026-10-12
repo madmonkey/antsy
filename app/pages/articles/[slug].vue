@@ -16,20 +16,13 @@ useSeoMeta({
 <template>
   <div>
   <StateMessage :error="error?.message" @retry="refresh()">
-    <article v-if="article" class="space-y-4">
-      <p class="text-sm text-muted">
-        <NuxtLink :to="`/topics/${article.topic.slug}`" class="underline">
-          {{ article.topic.name }}
-        </NuxtLink>
-        <template v-if="article.published_at">
-          · {{ new Date(article.published_at).toLocaleDateString('en-US') }}
-        </template>
-      </p>
-      <h1 class="text-3xl font-bold">
-        {{ article.title }}
-      </h1>
-      <ArticleBody :markdown="article.body" />
-    </article>
+    <ArticleView
+      v-if="article"
+      :title="article.title"
+      :body="article.body"
+      :topic="article.topic"
+      :published-at="article.published_at"
+    />
   </StateMessage>
   </div>
 </template>

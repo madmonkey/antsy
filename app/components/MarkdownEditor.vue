@@ -123,7 +123,7 @@ function startReplace(id: number) {
         @drop="onFiles"
       />
       <!-- eslint-disable-next-line vue/no-v-html -->
-      <div class="prose max-w-none overflow-auto rounded border border-default p-2" aria-label="Preview" data-test="editor-preview" v-html="html" />
+      <div class="article-body overflow-auto rounded border border-default p-2" aria-label="Preview" data-test="editor-preview" v-html="html" />
     </div>
     <ul v-if="images.length" class="space-y-1">
       <li v-for="img in images" :key="img.id" class="flex items-center gap-2" data-test="image-row">
