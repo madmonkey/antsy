@@ -92,12 +92,12 @@ description: "Task list for Markdown CMS Website"
 
 **Independent Test**: Admin reaches the area; a signed-in non-approved user and an anonymous visitor are refused.
 
-- [ ] T028 [P] [US2] Unit test `tests/unit/throttle.test.ts`: 3 failures then block for 15 minutes with a "retry at" time; reset on success; survives reload (localStorage)
-- [ ] T029 [P] [US2] Implement `app/utils/throttle.ts` (client-side only, documented as such per FR-006)
-- [ ] T030 [US2] Implement `app/composables/useAdminSession.ts`: `signInWithPassword`, `signOut`, check own row in `administrator_profiles` (UI gating only; RLS is the real boundary)
-- [ ] T031 [US2] Create `app/pages/admin/login.vue` (email/password form, throttle message) and route middleware `app/middleware/admin.ts` redirecting anonymous and non-allow-listed users from `/admin*` to `/admin/login`, with a "session ended" message on expiry
-- [ ] T032 [P] [US2] Create `app/layouts/admin.vue` and a minimal `app/pages/admin/index.vue` dashboard shell (lists come in US3)
-- [ ] T033 [P] [US2] Playwright test `tests/e2e/admin-auth.spec.ts`: admin signs in; non-approved user is refused and a direct write attempt is denied by RLS; anonymous `/admin` redirects; fourth attempt within 15 minutes is blocked
+- [X] T028 [P] [US2] Unit test `tests/unit/throttle.test.ts`: 3 failures then block for 15 minutes with a "retry at" time; reset on success; survives reload (localStorage)
+- [X] T029 [P] [US2] Implement `app/utils/throttle.ts` (client-side only, documented as such per FR-006)
+- [X] T030 [US2] Implement `app/composables/useAdminSession.ts`: `signInWithPassword`, `signOut`, check own row in `administrator_profiles` (UI gating only; RLS is the real boundary)
+- [X] T031 [US2] Create `app/pages/admin/login.vue` (email/password form, throttle message) and route middleware `app/middleware/admin.ts` redirecting anonymous and non-allow-listed users from `/admin*` to `/admin/login`, with a "session ended" message on expiry
+- [X] T032 [P] [US2] Create `app/layouts/admin.vue` and a minimal `app/pages/admin/index.vue` dashboard shell (lists come in US3)
+- [X] T033 [P] [US2] Playwright test `tests/e2e/admin-auth.spec.ts`: admin signs in; non-approved user is refused and a direct write attempt is denied by RLS; anonymous `/admin` redirects; fourth attempt within 15 minutes is blocked
 
 ---
 

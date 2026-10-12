@@ -7,7 +7,7 @@ export default defineConfig({
   workers: 1,
   expect: { timeout: 30_000 },
   timeout: 90_000,
-  use: { baseURL: 'http://localhost:3000' },
+  use: { baseURL: 'http://localhost:3000', testIdAttribute: 'data-test' },
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:3000',

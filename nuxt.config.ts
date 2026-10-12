@@ -9,6 +9,7 @@ export default defineNuxtConfig({
   modules: ['@nuxt/ui', '@nuxt/eslint'],
   css: ['~/assets/css/main.css'],
   ssr: true,
+  routeRules: { '/admin/**': { ssr: false } },
   colorMode: { preference: 'system' },
   app: {
     baseURL: process.env.NUXT_APP_BASE_URL || '/',
