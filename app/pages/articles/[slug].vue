@@ -5,7 +5,7 @@ const slug = useRoute().params.slug as string
 
 const { data: article, error, refresh } = await useAsyncData(`article-${slug}`, () => fetchArticleBySlug(slug))
 if (!error.value && !article.value) throw createError({ statusCode: 404, statusMessage: 'Article not found', fatal: true })
-onMounted(() => refresh())
+onNuxtReady(() => refresh()) // onMounted fires while hydrating, when refresh() returns the cached payload
 
 useSeoMeta({
   title: () => article.value?.title ?? 'Article',

@@ -9,7 +9,7 @@ const { data, error, refresh } = await useAsyncData(`topic-${slug}`, async () =>
   return topic ? { topic, articles: await fetchTopicArticles(topic.id) } : null
 })
 if (!error.value && !data.value) throw createError({ statusCode: 404, statusMessage: 'Topic not found', fatal: true })
-onMounted(() => refresh())
+onNuxtReady(() => refresh()) // onMounted fires while hydrating, when refresh() returns the cached payload
 
 useSeoMeta({
   title: () => data.value?.topic.name ?? 'Topic',

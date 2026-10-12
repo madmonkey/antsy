@@ -5,7 +5,7 @@ useSeoMeta({ title: 'Antsy Tek', description: 'Articles by Antsy Tek.' })
 
 const { data: topics, error, status, refresh } = await useAsyncData('topics', fetchTopics)
 // Static pages are built ahead of time; re-fetch so visitors see current content (FR-024).
-onMounted(() => refresh())
+onNuxtReady(() => refresh()) // onMounted fires while hydrating, when refresh() returns the cached payload
 </script>
 
 <template>
