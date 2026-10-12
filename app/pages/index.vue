@@ -22,12 +22,12 @@ onNuxtReady(() => refresh()) // onMounted fires while hydrating, when refresh() 
         :empty="topics && !topics.length ? 'No topics yet.' : undefined"
         @retry="refresh()"
       >
-        <ul class="space-y-3">
-          <li v-for="t in topics" :key="t.id">
-            <NuxtLink :to="`/topics/${t.slug}`" class="font-medium underline">
+        <ul class="space-y-2">
+          <li v-for="t in topics" :key="t.id" class="relative rounded-lg border border-default p-3 transition hover:bg-elevated">
+            <NuxtLink :to="`/topics/${t.slug}`" class="font-medium after:absolute after:inset-0">
               {{ t.name }}
             </NuxtLink>
-            <p v-if="t.description" class="text-sm text-muted">
+            <p v-if="t.description" class="mt-1 text-sm text-muted">
               {{ t.description }}
             </p>
           </li>
