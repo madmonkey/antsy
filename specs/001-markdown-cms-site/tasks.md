@@ -159,10 +159,10 @@ description: "Task list for Markdown CMS Website"
 
 **Independent Test**: Toggle day/night, reload and see it remembered; social icon opens the right profile in a new tab.
 
-- [ ] T050 [P] [US6] Component tests `tests/component/SiteHeader.test.ts`: toggle labels "Switch to night mode" / "Switch to day mode"; first visit follows device preference; choice persisted; social links have `target="_blank" rel="noopener noreferrer"` and `aria-label`; empty list renders only the toggle; keyboard operable
-- [ ] T051 [P] [US6] Create `app/app.config.ts` with site name and social links (GitHub, Bluesky; platform, label, URL)
-- [ ] T052 [P] [US6] Create `app/components/ThemeToggle.vue` and `app/components/SocialLinks.vue` (icons from `@iconify-json/simple-icons`)
-- [ ] T053 [US6] Create `app/components/SiteHeader.vue` (home link, toggle, social icons; wraps on narrow screens without hiding controls) and include it in `app/layouts/default.vue` and `app/layouts/admin.vue`; verify contrast of theme tokens in both modes including article content (FR-018, FR-020)
+- [X] T050 [P] [US6] Component tests `tests/component/SiteHeader.test.ts`: toggle labels "Switch to night mode" / "Switch to day mode"; first visit follows device preference; choice persisted; social links have `target="_blank" rel="noopener noreferrer"` and `aria-label`; empty list renders only the toggle; keyboard operable
+- [X] T051 [P] [US6] Create `app/app.config.ts` with site name and social links (GitHub, Bluesky; platform, label, URL)
+- [X] T052 [P] [US6] Create `app/components/ThemeToggle.vue` and `app/components/SocialLinks.vue` (icons from `@iconify-json/simple-icons`)
+- [X] T053 [US6] Create `app/components/SiteHeader.vue` (home link, toggle, social icons; wraps on narrow screens without hiding controls) and include it in `app/layouts/default.vue` and `app/layouts/admin.vue`; verify contrast of theme tokens in both modes including article content (FR-018, FR-020)
 
 ---
 

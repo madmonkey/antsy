@@ -9,20 +9,12 @@ async function signOut() {
 
 <template>
   <div>
-    <header class="border-b border-default">
-      <div class="mx-auto flex max-w-5xl items-center justify-between p-4">
-        <NuxtLink to="/admin" class="font-semibold">
-          Antsy Tek administration
-        </NuxtLink>
-        <div class="flex items-center gap-3">
-          <NuxtLink to="/" class="underline">
-            View site
-          </NuxtLink>
-          <UColorModeButton />
-          <UButton label="Sign out" variant="outline" @click="signOut" />
-        </div>
-      </div>
-    </header>
+    <SiteHeader width="max-w-5xl">
+      <NuxtLink to="/admin" class="px-2 underline">
+        Admin
+      </NuxtLink>
+      <UButton label="Sign out" variant="outline" @click="signOut" />
+    </SiteHeader>
     <main class="mx-auto max-w-5xl p-6">
       <slot />
     </main>
