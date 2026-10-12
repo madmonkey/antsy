@@ -10,9 +10,8 @@ onNuxtReady(() => refresh()) // onMounted fires while hydrating, when refresh() 
 </script>
 
 <template>
-  <div class="space-y-10">
-    <RecentArticles />
-    <section aria-labelledby="topics-heading" class="space-y-3">
+  <div class="grid gap-10 lg:grid-cols-[14rem_minmax(0,1fr)_16rem]">
+    <section aria-labelledby="topics-heading" class="order-2 space-y-3 lg:order-1">
       <h2 id="topics-heading" class="text-xl font-semibold">
         Topics
       </h2>
@@ -37,5 +36,7 @@ onNuxtReady(() => refresh()) // onMounted fires while hydrating, when refresh() 
         </ul>
       </StateMessage>
     </section>
+    <RecentArticles class="order-1 lg:order-2" />
+    <AboutMe class="order-3" />
   </div>
 </template>
