@@ -7,6 +7,8 @@ const routes: string[] = existsSync(routesFile) ? JSON.parse(readFileSync(routes
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   modules: ['@nuxt/ui', '@nuxt/eslint'],
+  ui: { fonts: false },
+  features: { inlineStyles: true },
   css: ['~/assets/css/main.css'],
   ssr: true,
   routeRules: {
