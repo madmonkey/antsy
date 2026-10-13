@@ -3,7 +3,8 @@ import { useSupabase } from '~/composables/useSupabase'
 
 // Lists never select `body`.
 export async function fetchTopicArticles(topicId: string) {
-  const { data, error } = await useSupabase()
+  const sb = await useSupabase()
+  const { data, error } = await sb
     .from('content_items').select('id, title, slug, excerpt, published_at')
     .eq('topic_id', topicId).order('published_at', { ascending: false })
   if (error) throw error
@@ -11,7 +12,8 @@ export async function fetchTopicArticles(topicId: string) {
 }
 
 export async function fetchArticleBySlug(slug: string) {
-  const { data, error } = await useSupabase()
+  const sb = await useSupabase()
+  const { data, error } = await sb
     .from('content_items')
     .select('id, title, slug, excerpt, body, published_at, topic:topics!inner(name, slug)')
     .eq('slug', slug).maybeSingle()
@@ -20,7 +22,8 @@ export async function fetchArticleBySlug(slug: string) {
 }
 
 export async function fetchPreviewArticles(count: number) {
-  const { data, error } = await useSupabase()
+  const sb = await useSupabase()
+  const { data, error } = await sb
     .from('content_items')
     .select('id, title, slug, excerpt, published_at, topic:topics!inner(name, slug, is_previewable)')
     .eq('topics.is_previewable', true)

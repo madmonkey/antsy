@@ -34,7 +34,7 @@ export async function describeFailure(e: PostgrestError | { message: string, cod
 }
 
 async function freeSlug(base: string) {
-  const sb = useSupabase()
+  const sb = await useSupabase()
   const [a, t] = await Promise.all([
     sb.from('content_items').select('slug').like('slug', `${base}%`),
     sb.from('topics').select('slug').like('slug', `${base}%`)
@@ -43,41 +43,48 @@ async function freeSlug(base: string) {
 }
 
 export async function listAdminTopics() {
-  const { data, error } = await useSupabase().from('topics').select('id, name, slug, description, is_active, is_previewable, published_at').order('name')
+  const sb = await useSupabase()
+  const { data, error } = await sb.from('topics').select('id, name, slug, description, is_active, is_previewable, published_at').order('name')
   if (error) throw error
   return data as AdminTopic[]
 }
 
 export async function listAdminArticles() {
-  const { data, error } = await useSupabase().from('content_items').select('id, topic_id, title, slug, is_active, published_at').order('title')
+  const sb = await useSupabase()
+  const { data, error } = await sb.from('content_items').select('id, topic_id, title, slug, is_active, published_at').order('title')
   if (error) throw error
   return data as AdminArticleRow[]
 }
 
 export async function getAdminArticle(id: string) {
-  const { data, error } = await useSupabase().from('content_items').select('*').eq('id', id).maybeSingle()
+  const sb = await useSupabase()
+  const { data, error } = await sb.from('content_items').select('*').eq('id', id).maybeSingle()
   if (error) throw error
   return data as Article | null
 }
 
 export async function saveTopic(id: string | null, fields: Pick<Topic, 'name' | 'slug' | 'description' | 'is_active' | 'is_previewable'>) {
-  const q = useSupabase().from('topics')
+  const sb = await useSupabase()
+  const q = sb.from('topics')
   const { error } = id ? await q.update(fields).eq('id', id) : await q.insert(fields)
   return error ? describeFailure(error, 'topics', fields.slug) : null
 }
 
 export async function deleteTopic(id: string) {
-  const { error } = await useSupabase().from('topics').delete().eq('id', id)
+  const sb = await useSupabase()
+  const { error } = await sb.from('topics').delete().eq('id', id)
   return error ? describeFailure(error, 'topics') : null
 }
 
 export async function saveArticle(id: string | null, fields: Pick<Article, 'topic_id' | 'title' | 'slug' | 'excerpt' | 'body' | 'is_active'>) {
-  const q = useSupabase().from('content_items')
+  const sb = await useSupabase()
+  const q = sb.from('content_items')
   const { error } = id ? await q.update(fields).eq('id', id) : await q.insert(fields)
   return error ? describeFailure(error, 'content_items', fields.slug) : null
 }
 
 export async function deleteArticle(id: string) {
-  const { error } = await useSupabase().from('content_items').delete().eq('id', id)
+  const sb = await useSupabase()
+  const { error } = await sb.from('content_items').delete().eq('id', id)
   return error ? describeFailure(error, 'content_items') : null
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import StateMessage from '~/components/StateMessage.vue'
 import { fetchPreviewArticles } from '~/composables/useArticles'
 import type { PreviewArticle } from '~/types'
@@ -7,23 +7,47 @@ import type { PreviewArticle } from '~/types'
 // Reusable on any page: <RecentArticles /> uses the site default, <RecentArticles :count="6" /> overrides it.
 const props = defineProps<{ count?: number, title?: string }>()
 
-const articles = ref<PreviewArticle[]>([])
-const loading = ref(true)
-const error = ref<string | null>(null)
+const targetCount = computed(() => props.count ?? useAppConfig().site.recentCount)
+
+// Prerender articles via useAsyncData during SSR/prerender to eliminate layout shifts.
+// Fallback to client load when useAsyncData is not present (isolated unit test environment).
+const hasNuxtAsync = typeof useAsyncData === 'function'
+
+const asyncState = hasNuxtAsync
+  ? useAsyncData(
+      () => `recent-articles-${targetCount.value}`,
+      () => fetchPreviewArticles(targetCount.value)
+    )
+  : null
+
+const clientArticles = ref<PreviewArticle[]>([])
+const clientLoading = ref(true)
+const clientError = ref<string | null>(null)
 
 async function load() {
-  loading.value = true
-  error.value = null
+  if (hasNuxtAsync && asyncState) {
+    return asyncState.refresh()
+  }
+  clientLoading.value = true
+  clientError.value = null
   try {
-    articles.value = await fetchPreviewArticles(props.count ?? useAppConfig().site.recentCount)
+    clientArticles.value = await fetchPreviewArticles(targetCount.value)
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Unknown error'
+    clientError.value = e instanceof Error ? e.message : 'Unknown error'
   } finally {
-    loading.value = false
+    clientLoading.value = false
   }
 }
 
-onMounted(load)
+if (!hasNuxtAsync) {
+  onMounted(load)
+} else if (typeof onNuxtReady === 'function') {
+  onNuxtReady(() => asyncState?.refresh())
+}
+
+const articles = computed(() => (hasNuxtAsync ? asyncState?.data.value ?? [] : clientArticles.value))
+const loading = computed(() => (hasNuxtAsync ? asyncState?.status.value === 'pending' && !asyncState?.data.value : clientLoading.value))
+const error = computed(() => (hasNuxtAsync ? asyncState?.error.value?.message ?? null : clientError.value))
 
 const formatDate = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-US') : '')
 </script>

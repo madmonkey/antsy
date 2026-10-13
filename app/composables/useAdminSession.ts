@@ -8,9 +8,10 @@ export function useAdminSession() {
   const sb = () => useSupabase()
 
   async function isAdmin(): Promise<boolean> {
-    const { data: { session } } = await sb().auth.getSession()
+    const client = await sb()
+    const { data: { session } } = await client.auth.getSession()
     if (!session) return false
-    const { data } = await sb().from('administrator_profiles').select('user_id').eq('user_id', session.user.id).maybeSingle()
+    const { data } = await client.from('administrator_profiles').select('user_id').eq('user_id', session.user.id).maybeSingle()
     return !!data
   }
 
@@ -18,14 +19,15 @@ export function useAdminSession() {
     const gate = checkThrottle(localStorage)
     if (gate.blocked) return { error: 'Too many failed attempts.', retryAt: gate.retryAt }
 
-    const { error } = await sb().auth.signInWithPassword({ email, password })
+    const client = await sb()
+    const { error } = await client.auth.signInWithPassword({ email, password })
     if (error) {
       recordFailure(localStorage)
       const after = checkThrottle(localStorage)
       return { error: 'Invalid email or password.', retryAt: after.retryAt }
     }
     if (!(await isAdmin())) {
-      await sb().auth.signOut()
+      await client.auth.signOut()
       return { error: 'This account is not approved for administration.' }
     }
     resetThrottle(localStorage)
@@ -35,7 +37,8 @@ export function useAdminSession() {
 
   async function signOut() {
     wasSignedIn = false
-    await sb().auth.signOut()
+    const client = await sb()
+    await client.auth.signOut()
   }
 
   // Middleware helper: true when someone had a session this visit and lost it.

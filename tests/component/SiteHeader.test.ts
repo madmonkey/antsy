@@ -6,13 +6,14 @@ import SocialLinks from '../../app/components/SocialLinks.vue'
 import ThemeToggle from '../../app/components/ThemeToggle.vue'
 
 const mode = { value: 'light', preference: 'system' }
+const avatar = ref('')
 const social = ref([
   { platform: 'github', label: 'GitHub', url: 'https://github.com/x' },
   { platform: 'bluesky', label: 'Bluesky', url: 'https://bsky.app/' }
 ])
 
 vi.stubGlobal('useColorMode', () => mode)
-vi.stubGlobal('useAppConfig', () => ({ site: { name: 'Antsy Tek', get social() { return social.value } } }))
+vi.stubGlobal('useAppConfig', () => ({ site: { name: 'Antsy Tek', get avatar() { return avatar.value }, get social() { return social.value } } }))
 
 const UButton = { props: ['ariaLabel'], template: '<button :aria-label="ariaLabel" @click="$emit(\'click\')"><slot /></button>' }
 const stubs = { ClientOnly: { template: '<div><slot /></div>' }, UButton, UIcon: true, NuxtLink: { template: '<a><slot /></a>' }, ThemeToggle, SocialLinks }
@@ -52,5 +53,17 @@ describe('SiteHeader', () => {
     const w = mount(SiteHeader, { global: { stubs } })
     expect(w.find('[data-test=social-links]').exists()).toBe(false)
     expect(w.findAll('button')).toHaveLength(1)
+  })
+
+  it('renders avatar with async decoding when configured', () => {
+    avatar.value = '/avatar.webp'
+    const w = mount(SiteHeader, { global: { stubs } })
+    const img = w.find('img')
+    expect(img.exists()).toBe(true)
+    expect(img.attributes('src')).toBe('/avatar.webp')
+    expect(img.attributes('decoding')).toBe('async')
+    expect(img.attributes('width')).toBe('32')
+    expect(img.attributes('height')).toBe('32')
+    avatar.value = ''
   })
 })
