@@ -18,7 +18,8 @@ export default defineNuxtConfig({
     '/**/*.ico': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
     '/**/*.png': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
     '/**/*.webp': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
-    '/**/*.woff2': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } }
+    '/**/*.woff2': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/**': { headers: { 'cache-control': 'public, max-age=0, must-revalidate' } }
   },
   colorMode: { preference: 'system' },
   app: {
