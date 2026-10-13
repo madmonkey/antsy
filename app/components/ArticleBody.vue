@@ -5,7 +5,8 @@ import type { EmbeddedImage } from '~/utils/embed-image'
 
 // `images` is only passed by the editor preview, where `embedded:n` tokens are not yet expanded.
 const props = defineProps<{ markdown: string, images?: EmbeddedImage[] }>()
-const html = computed(() => (props.images ? renderPreview(props.markdown, props.images) : renderMarkdown(props.markdown)))
+const base = useRuntimeConfig().app.baseURL
+const html = computed(() => (props.images ? renderPreview(props.markdown, props.images, base) : renderMarkdown(props.markdown, base)))
 </script>
 
 <template>

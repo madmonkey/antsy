@@ -45,3 +45,13 @@
 .article-body .footnotes h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
 .article-body [data-footnote-backref] { margin-left: 0.35rem; text-decoration: none; }
 .article-body :target { background: var(--ui-bg-elevated); scroll-margin-top: 1rem; }
+.article-body dt { font-weight: 600; margin-top: 0.75rem; }
+.article-body dd { margin-left: 1.5rem; }
+.article-body { --hl-keyword: #c2185b; --hl-string: #1b7a3a; --hl-number: #b45309; --hl-comment: #6b7280; --hl-name: #1d4ed8; }
+.dark .article-body { --hl-keyword: #f472b6; --hl-string: #86efac; --hl-number: #fdba74; --hl-comment: #9ca3af; --hl-name: #93c5fd; }
+.article-body .hljs-keyword, .article-body .hljs-literal, .article-body .hljs-selector-tag, .article-body .hljs-meta { color: var(--hl-keyword); }
+.article-body .hljs-string, .article-body .hljs-regexp, .article-body .hljs-addition { color: var(--hl-string); }
+.article-body .hljs-number, .article-body .hljs-symbol, .article-body .hljs-deletion { color: var(--hl-number); }
+.article-body .hljs-comment, .article-body .hljs-quote { color: var(--hl-comment); font-style: italic; }
+.article-body .hljs-title, .article-body .hljs-built_in, .article-body .hljs-type, .article-body .hljs-attr,
+.article-body .hljs-attribute, .article-body .hljs-name, .article-body .hljs-section, .article-body .hljs-variable { color: var(--hl-name); }

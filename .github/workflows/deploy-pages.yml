@@ -45,6 +45,21 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # If Pages Source is "Deploy from a branch", GitHub also runs its own Jekyll build that can finish after
+  # this deploy and replace the site with the README. Fail loudly instead of silently serving it.
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          sleep 150
+          if curl -fsSL "${{ needs.deploy.outputs.page_url }}" | grep -qi 'content="Jekyll'; then
+            echo "::error::The live site is the Jekyll README build. Set Settings > Pages > Source to GitHub Actions."
+            exit 1
+          fi

@@ -47,4 +47,55 @@ describe('renderMarkdown: formatting', () => {
     expect(html).toContain('The note.')
     expect(html).toMatch(/href="#footnote-1"|href="#footnote-ref-1"/)
   })
+
+  it('keeps list start numbers and link titles', () => {
+    const html = renderMarkdown('3. three\n4. four\n\n[x](https://a.com "Tip")')
+    expect(html).toContain('<ol start="3">')
+    expect(html).toContain('title="Tip"')
+  })
+
+  it('gives headings unique ids so in-page links work', () => {
+    const html = renderMarkdown('## Same\n\n## Same\n\n### Other *one*')
+    expect(html).toContain('<h2 id="same">')
+    expect(html).toContain('<h2 id="same-2">')
+    expect(html).toContain('<h3 id="other-one">')
+  })
+
+  it('prefixes site-relative links with the base path but not external ones', () => {
+    const html = renderMarkdown('[a](/topics/x) [b](//evil.com) [c](#top)', '/antsy/')
+    expect(html).toContain('href="/antsy/topics/x"')
+    expect(html).not.toContain('href="//evil.com"')
+    expect(html).toContain('href="#top"')
+  })
+
+  it('allows tel links', () => {
+    expect(renderMarkdown('[call](tel:555)')).toContain('href="tel:555"')
+  })
+
+  it('breaks lines on single newlines', () => {
+    expect(renderMarkdown('a\nb')).toContain('a<br')
+  })
+
+  it('converts emoji shortcodes but not inside code', () => {
+    const html = renderMarkdown('hi :tada: `:tada:` :nope:')
+    expect(html).toContain('🎉')
+    expect(html).toContain('<code>:tada:</code>')
+    expect(html).toContain(':nope:')
+  })
+
+  it('renders definition lists', () => {
+    const html = renderMarkdown('Term\n: The *meaning*\n: Another')
+    expect(html).toContain('<dt>Term</dt>')
+    expect(html).toContain('<dd>The <em>meaning</em></dd>')
+    expect(html).toContain('<dd>Another</dd>')
+  })
+
+  it('highlights known languages and leaves others plain and safe', () => {
+    const js = renderMarkdown('```js\nconst x = "<b>"\n```')
+    expect(js).toContain('class="language-js"')
+    expect(js).toContain('hljs-keyword')
+    expect(js).not.toContain('<b>')
+    expect(renderMarkdown('```nonsense\nx\n```')).toContain('<code')
+    expect(renderMarkdown('```constructor\nx\n```')).toContain('<pre')
+  })
 })
