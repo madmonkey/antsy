@@ -9,7 +9,15 @@ export default defineNuxtConfig({
   modules: ['@nuxt/ui', '@nuxt/eslint'],
   css: ['~/assets/css/main.css'],
   ssr: true,
-  routeRules: { '/admin/**': { ssr: false } },
+  routeRules: {
+    '/admin/**': { ssr: false },
+    '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/**/*.svg': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/**/*.ico': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/**/*.png': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/**/*.webp': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/**/*.woff2': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } }
+  },
   colorMode: { preference: 'system' },
   app: {
     pageTransition: { name: 'page', mode: 'out-in' },
