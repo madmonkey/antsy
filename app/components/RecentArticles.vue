@@ -34,12 +34,12 @@ const formatDate = (iso: string | null) => (iso ? new Date(iso).toLocaleDateStri
       {{ title ?? 'Recent articles' }}
     </h2>
     <StateMessage :loading="loading" :error="error" :empty="!articles.length ? 'No articles yet.' : undefined" @retry="load">
-      <ul class="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2" tabindex="0" aria-label="Recent articles, scroll horizontally">
+      <ul class="flex flex-wrap gap-4" aria-label="Recent articles">
         <li
           v-for="a in articles"
           :key="a.id"
           data-test="article"
-          class="relative flex w-72 shrink-0 snap-start flex-col gap-2 rounded-lg border border-default p-4 transition hover:bg-elevated"
+          class="relative flex w-72 max-w-full flex-col gap-2 rounded-lg border border-default p-4 transition hover:bg-elevated"
         >
           <p class="text-sm text-muted">
             <NuxtLink :to="`/topics/${a.topic.slug}`" class="relative z-10 hover:underline">
