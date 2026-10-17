@@ -39,11 +39,17 @@ beforeEach(() => {
 describe('public content queries', () => {
   it('requires active, published articles in topic and recent lists', async () => {
     await fetchTopicArticles('topic-id')
-    await fetchPreviewArticles(3)
-
+    expect(calls.some(call => call.method === 'select' && call.args[0] === 'id, title, slug, excerpt, published_at, topic:topics!inner(is_active)')).toBe(true)
     expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['is_active', true] })
+    expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['topic.is_active', true] })
     expect(calls).toContainEqual({ table: 'content_items', method: 'not', args: ['published_at', 'is', null] })
-    expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['topics.is_active', true] })
+
+    calls.length = 0
+    await fetchPreviewArticles(3)
+    expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['is_active', true] })
+    expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['topic.is_previewable', true] })
+    expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['topic.is_active', true] })
+    expect(calls).toContainEqual({ table: 'content_items', method: 'not', args: ['published_at', 'is', null] })
   })
 
   it('does not return an inactive article or one from an inactive topic by slug', async () => {

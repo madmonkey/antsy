@@ -5,8 +5,9 @@ import { useSupabase } from '~/composables/useSupabase'
 export async function fetchTopicArticles(topicId: string) {
   const sb = await useSupabase()
   const { data, error } = await sb
-    .from('content_items').select('id, title, slug, excerpt, published_at')
-    .eq('topic_id', topicId).eq('is_active', true).not('published_at', 'is', null)
+    .from('content_items').select('id, title, slug, excerpt, published_at, topic:topics!inner(is_active)')
+    .eq('topic_id', topicId).eq('is_active', true).eq('topic.is_active', true)
+    .not('published_at', 'is', null)
     .order('published_at', { ascending: false })
   if (error) throw error
   return data as ArticleSummary[]
@@ -29,8 +30,8 @@ export async function fetchPreviewArticles(count: number) {
     .from('content_items')
     .select('id, title, slug, excerpt, published_at, topic:topics!inner(name, slug, is_previewable)')
     .eq('is_active', true)
-    .eq('topics.is_previewable', true)
-    .eq('topics.is_active', true)
+    .eq('topic.is_previewable', true)
+    .eq('topic.is_active', true)
     .not('published_at', 'is', null)
     .order('published_at', { ascending: false })
     .limit(Math.max(1, Math.floor(count)))
