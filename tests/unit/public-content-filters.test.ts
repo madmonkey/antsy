@@ -18,8 +18,7 @@ interface Query extends PromiseLike<QueryResult> {
 const calls: { table: string, method: string, args: unknown[] }[] = []
 
 function queryFor(table: string) {
-  let query: Query
-  query = {
+  const query: Query = {
     select: (...args) => { calls.push({ table, method: 'select', args }); return query },
     eq: (...args) => { calls.push({ table, method: 'eq', args }); return query },
     not: (...args) => { calls.push({ table, method: 'not', args }); return query },
