@@ -47,9 +47,9 @@ const avatarSrc = computed(() => {
             class="size-8 rounded-full"
             :class="{ 'ring-2 ring-green-500': isAdmin }"
           >
-          <span v-if="isAdmin" class="sr-only">Logged in as admin</span>
         </template>
       </NuxtLink>
+      <span v-if="isAdmin" class="sr-only">Admin session active</span>
       <div class="flex items-center gap-1">
         <SocialLinks v-if="site.social.length" :links="site.social" />
         <ThemeToggle />

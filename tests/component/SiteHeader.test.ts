@@ -77,7 +77,7 @@ describe('SiteHeader', () => {
     const w = mount(SiteHeader, { global: { stubs } })
     await flushPromises()
     expect(w.find('img').classes()).toContain('ring-green-500')
-    expect(w.text()).toContain('Logged in as admin')
+    expect(w.text()).toContain('Admin session active')
     avatar.value = ''
   })
 
@@ -86,7 +86,7 @@ describe('SiteHeader', () => {
     const w = mount(SiteHeader, { global: { stubs } })
     await flushPromises()
     expect(w.find('img').classes()).not.toContain('ring-green-500')
-    expect(w.text()).not.toContain('Logged in as admin')
+    expect(w.text()).not.toContain('Admin session active')
     avatar.value = ''
   })
 })
