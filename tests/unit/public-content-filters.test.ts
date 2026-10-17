@@ -37,14 +37,15 @@ beforeEach(() => {
 })
 
 describe('public content queries', () => {
-  it('requires active, published articles in topic and recent lists', async () => {
+  it('requires active, published articles from active topics in topic lists', async () => {
     await fetchTopicArticles('topic-id')
     expect(calls.some(call => call.method === 'select' && call.args[0] === 'id, title, slug, excerpt, published_at, topic:topics!inner(is_active)')).toBe(true)
     expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['is_active', true] })
     expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['topic.is_active', true] })
     expect(calls).toContainEqual({ table: 'content_items', method: 'not', args: ['published_at', 'is', null] })
+  })
 
-    calls.length = 0
+  it('requires active, published articles from active previewable topics in recent lists', async () => {
     await fetchPreviewArticles(3)
     expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['is_active', true] })
     expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['topic.is_previewable', true] })
@@ -60,12 +61,18 @@ describe('public content queries', () => {
     expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['topic.is_active', true] })
   })
 
-  it('only counts published articles for active topics', async () => {
+  it('counts only published articles for active topics', async () => {
     await fetchTopics()
-    await fetchTopicBySlug('topic')
 
     expect(calls).toContainEqual({ table: 'topics', method: 'eq', args: ['is_active', true] })
     expect(calls).toContainEqual({ table: 'topics', method: 'eq', args: ['articles.is_active', true] })
     expect(calls).toContainEqual({ table: 'topics', method: 'not', args: ['articles.published_at', 'is', null] })
+  })
+
+  it('does not look up inactive topics by slug', async () => {
+    await fetchTopicBySlug('topic')
+
+    expect(calls).toContainEqual({ table: 'topics', method: 'eq', args: ['slug', 'topic'] })
+    expect(calls).toContainEqual({ table: 'topics', method: 'eq', args: ['is_active', true] })
   })
 })
