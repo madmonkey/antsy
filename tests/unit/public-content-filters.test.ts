@@ -18,6 +18,7 @@ interface Query extends PromiseLike<QueryResult> {
 const calls: { table: string, method: string, args: unknown[] }[] = []
 
 function queryFor(table: string) {
+  const result = Promise.resolve({ data: [], error: null })
   const query: Query = {
     select: (...args) => { calls.push({ table, method: 'select', args }); return query },
     eq: (...args) => { calls.push({ table, method: 'eq', args }); return query },
@@ -25,7 +26,7 @@ function queryFor(table: string) {
     order: (...args) => { calls.push({ table, method: 'order', args }); return query },
     limit: (...args) => { calls.push({ table, method: 'limit', args }); return query },
     maybeSingle: () => Promise.resolve({ data: null, error: null }),
-    then: Promise.resolve({ data: [], error: null }).then.bind(Promise.resolve({ data: [], error: null }))
+    then: result.then.bind(result)
   }
   return query
 }

@@ -49,7 +49,7 @@ const avatarSrc = computed(() => {
           >
         </template>
       </NuxtLink>
-      <span v-if="isAdmin" role="status" class="sr-only">Admin session active</span>
+      <span role="status" class="sr-only">{{ isAdmin ? 'Admin session active' : '' }}</span>
       <div class="flex items-center gap-1">
         <SocialLinks v-if="site.social.length" :links="site.social" />
         <ThemeToggle />
