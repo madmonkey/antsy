@@ -1,8 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useAdminSession } from '~/composables/useAdminSession'
 
 defineProps<{ width?: string }>()
 const { site } = useAppConfig()
+const isAdmin = ref(false)
+
+onMounted(async () => {
+  try {
+    isAdmin.value = await useAdminSession().isAdmin()
+  } catch {
+    isAdmin.value = false
+  }
+})
 
 const avatarSrc = computed(() => {
   const avatar = site.avatar
@@ -27,8 +37,19 @@ const avatarSrc = computed(() => {
     <div :class="['mx-auto flex flex-wrap items-center justify-between gap-2 p-4', width ?? 'max-w-3xl']">
       <NuxtLink to="/" class="flex items-center gap-2 font-semibold">
         {{ site.name }}
-        <img v-if="avatarSrc" :src="avatarSrc" alt="" width="32" height="32" decoding="async" class="size-8 rounded-full">
+        <template v-if="avatarSrc">
+          <img
+            :src="avatarSrc"
+            alt=""
+            width="32"
+            height="32"
+            decoding="async"
+            class="size-8 rounded-full"
+            :class="{ 'ring-2 ring-green-500': isAdmin }"
+          >
+        </template>
       </NuxtLink>
+      <span role="status" class="sr-only">{{ isAdmin ? 'Admin session active' : '' }}</span>
       <div class="flex items-center gap-1">
         <SocialLinks v-if="site.social.length" :links="site.social" />
         <ThemeToggle />

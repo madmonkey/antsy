@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 import SiteHeader from '../../app/components/SiteHeader.vue'
@@ -7,6 +7,7 @@ import ThemeToggle from '../../app/components/ThemeToggle.vue'
 
 const mode = { value: 'light', preference: 'system' }
 const avatar = ref('')
+const { isAdmin } = vi.hoisted(() => ({ isAdmin: vi.fn() }))
 const social = ref([
   { platform: 'github', label: 'GitHub', url: 'https://github.com/x' },
   { platform: 'bluesky', label: 'Bluesky', url: 'https://bsky.app/' }
@@ -14,6 +15,7 @@ const social = ref([
 
 vi.stubGlobal('useColorMode', () => mode)
 vi.stubGlobal('useAppConfig', () => ({ site: { name: 'Antsy Tek', get avatar() { return avatar.value }, get social() { return social.value } } }))
+vi.mock('~/composables/useAdminSession', () => ({ useAdminSession: () => ({ isAdmin }) }))
 
 const UButton = { props: ['ariaLabel'], template: '<button :aria-label="ariaLabel" @click="$emit(\'click\')"><slot /></button>' }
 const stubs = { ClientOnly: { template: '<div><slot /></div>' }, UButton, UIcon: true, NuxtLink: { template: '<a><slot /></a>' }, ThemeToggle, SocialLinks }
@@ -35,6 +37,8 @@ describe('ThemeToggle', () => {
 })
 
 describe('SiteHeader', () => {
+  beforeEach(() => { isAdmin.mockReset().mockResolvedValue(false) })
+
   it('renders safe, labelled social links and the toggle', () => {
     social.value = [{ platform: 'github', label: 'GitHub', url: 'https://github.com/x' }, { platform: 'bluesky', label: 'Bluesky', url: 'https://bsky.app/' }]
     const w = mount(SiteHeader, { global: { stubs } })
@@ -64,6 +68,25 @@ describe('SiteHeader', () => {
     expect(img.attributes('decoding')).toBe('async')
     expect(img.attributes('width')).toBe('32')
     expect(img.attributes('height')).toBe('32')
+    avatar.value = ''
+  })
+
+  it('shows a green ring only when the signed-in user is an admin', async () => {
+    avatar.value = '/avatar.webp'
+    isAdmin.mockResolvedValueOnce(true)
+    const w = mount(SiteHeader, { global: { stubs } })
+    await flushPromises()
+    expect(w.find('img').classes()).toContain('ring-green-500')
+    expect(w.text()).toContain('Admin session active')
+    avatar.value = ''
+  })
+
+  it('does not show the admin indicator to public visitors', async () => {
+    avatar.value = '/avatar.webp'
+    const w = mount(SiteHeader, { global: { stubs } })
+    await flushPromises()
+    expect(w.find('img').classes()).not.toContain('ring-green-500')
+    expect(w.text()).not.toContain('Admin session active')
     avatar.value = ''
   })
 })

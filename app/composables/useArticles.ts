@@ -5,8 +5,10 @@ import { useSupabase } from '~/composables/useSupabase'
 export async function fetchTopicArticles(topicId: string) {
   const sb = await useSupabase()
   const { data, error } = await sb
-    .from('content_items').select('id, title, slug, excerpt, published_at')
-    .eq('topic_id', topicId).order('published_at', { ascending: false })
+    .from('content_items').select('id, title, slug, excerpt, published_at, topic:topics!inner(is_active)')
+    .eq('topic_id', topicId).eq('is_active', true).eq('topic.is_active', true)
+    .not('published_at', 'is', null)
+    .order('published_at', { ascending: false })
   if (error) throw error
   return data as ArticleSummary[]
 }
@@ -16,7 +18,8 @@ export async function fetchArticleBySlug(slug: string) {
   const { data, error } = await sb
     .from('content_items')
     .select('id, title, slug, excerpt, body, published_at, topic:topics!inner(name, slug)')
-    .eq('slug', slug).maybeSingle()
+    .eq('slug', slug).eq('is_active', true).not('published_at', 'is', null)
+    .eq('topic.is_active', true).maybeSingle()
   if (error) throw error
   return data as unknown as (Pick<Article, 'id' | 'title' | 'slug' | 'excerpt' | 'body' | 'published_at'> & { topic: { name: string, slug: string } }) | null
 }
@@ -26,7 +29,9 @@ export async function fetchPreviewArticles(count: number) {
   const { data, error } = await sb
     .from('content_items')
     .select('id, title, slug, excerpt, published_at, topic:topics!inner(name, slug, is_previewable)')
-    .eq('topics.is_previewable', true)
+    .eq('is_active', true)
+    .eq('topic.is_previewable', true)
+    .eq('topic.is_active', true)
     .not('published_at', 'is', null)
     .order('published_at', { ascending: false })
     .limit(Math.max(1, Math.floor(count)))
