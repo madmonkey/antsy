@@ -1,0 +1,65 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { fetchArticleBySlug, fetchPreviewArticles, fetchTopicArticles } from '../../app/composables/useArticles'
+import { fetchTopicBySlug, fetchTopics } from '../../app/composables/useTopics'
+
+const { useSupabaseMock } = vi.hoisted(() => ({ useSupabaseMock: vi.fn() }))
+vi.mock('~/composables/useSupabase', () => ({ useSupabase: useSupabaseMock }))
+
+type QueryResult = { data: unknown[] | null, error: null }
+interface Query extends PromiseLike<QueryResult> {
+  select(...args: unknown[]): Query
+  eq(...args: unknown[]): Query
+  not(...args: unknown[]): Query
+  order(...args: unknown[]): Query
+  limit(...args: unknown[]): Query
+  maybeSingle(): Promise<{ data: null, error: null }>
+}
+
+const calls: { table: string, method: string, args: unknown[] }[] = []
+
+function queryFor(table: string) {
+  let query: Query
+  query = {
+    select: (...args) => { calls.push({ table, method: 'select', args }); return query },
+    eq: (...args) => { calls.push({ table, method: 'eq', args }); return query },
+    not: (...args) => { calls.push({ table, method: 'not', args }); return query },
+    order: (...args) => { calls.push({ table, method: 'order', args }); return query },
+    limit: (...args) => { calls.push({ table, method: 'limit', args }); return query },
+    maybeSingle: () => Promise.resolve({ data: null, error: null }),
+    then: Promise.resolve({ data: [], error: null }).then.bind(Promise.resolve({ data: [], error: null }))
+  }
+  return query
+}
+
+beforeEach(() => {
+  calls.length = 0
+  useSupabaseMock.mockResolvedValue({ from: (table: string) => queryFor(table) })
+})
+
+describe('public content queries', () => {
+  it('requires active, published articles in topic and recent lists', async () => {
+    await fetchTopicArticles('topic-id')
+    await fetchPreviewArticles(3)
+
+    expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['is_active', true] })
+    expect(calls).toContainEqual({ table: 'content_items', method: 'not', args: ['published_at', 'is', null] })
+    expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['topics.is_active', true] })
+  })
+
+  it('does not return an inactive article or one from an inactive topic by slug', async () => {
+    await fetchArticleBySlug('draft')
+
+    expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['is_active', true] })
+    expect(calls).toContainEqual({ table: 'content_items', method: 'not', args: ['published_at', 'is', null] })
+    expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['topic.is_active', true] })
+  })
+
+  it('only counts published articles for active topics', async () => {
+    await fetchTopics()
+    await fetchTopicBySlug('topic')
+
+    expect(calls).toContainEqual({ table: 'topics', method: 'eq', args: ['is_active', true] })
+    expect(calls).toContainEqual({ table: 'topics', method: 'eq', args: ['articles.is_active', true] })
+    expect(calls).toContainEqual({ table: 'topics', method: 'not', args: ['articles.published_at', 'is', null] })
+  })
+})
