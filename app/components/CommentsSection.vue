@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
   countApproved, deleteOwn, getProfile, getReader, listApproved, onReaderChange, postComment, registerWithEmail,
   renderCaptcha, saveDisplayName, signInWith, signInWithEmail, signOut, type ReaderState
@@ -28,6 +28,9 @@ const email = ref('')
 const password = ref('')
 const captchaEl = ref<HTMLElement | null>(null)
 const captchaToken = ref('')
+const authOpen = ref(false)
+const authMessage = ref('')
+const authIsError = ref(false)
 let stop: (() => void) | undefined
 
 const userId = computed(() => (reader.value.status === 'verified' ? reader.value.userId : ''))
@@ -91,30 +94,43 @@ function keepDraft() {
 async function oauth(provider: 'google' | 'github') {
   keepDraft()
   const err = await signInWith(provider, window.location.href.split('#')[0]!)
-  if (err) say(err, true)
+  if (err) authSay(err, true)
 }
 
-async function openEmail() {
-  emailMode.value = true
-  if (!siteKey) return
-  await new Promise(r => setTimeout(r, 0))
-  try {
-    if (captchaEl.value) await renderCaptcha(captchaEl.value, siteKey, (t) => { captchaToken.value = t })
-  } catch {
-    say('The security check could not load. Try again.', true)
-  }
+function openAuth(createAccount: boolean) {
+  register.value = createAccount
+  emailMode.value = false
+  captchaToken.value = ''
+  authMessage.value = ''
+  authIsError.value = false
+  authOpen.value = true
 }
+
+function authSay(m: string, isError = false) {
+  authMessage.value = m
+  authIsError.value = isError
+}
+
+// The widget element only exists once the email form is shown inside the dialog.
+watch(captchaEl, async (el) => {
+  if (!el || !siteKey) return
+  try {
+    await renderCaptcha(el, siteKey, (t) => { captchaToken.value = t })
+  } catch {
+    authSay('The security check could not load. Try again.', true)
+  }
+})
 
 async function submitEmail() {
-  say('')
-  if (siteKey && !captchaToken.value) return say('Complete the security check first.', true)
+  authSay('')
+  if (siteKey && !captchaToken.value) return authSay('Complete the security check first.', true)
   if (register.value) {
     const err = await registerWithEmail(email.value, password.value, window.location.href.split('#')[0]!, captchaToken.value)
-    return err ? say(err, true) : say('Check your email to confirm your account.')
+    return err ? authSay(err, true) : authSay('Check your email to confirm your account.')
   }
   const err = await signInWithEmail(email.value, password.value, captchaToken.value)
-  if (err) return say(err, true)
-  emailMode.value = false
+  if (err) return authSay(err, true)
+  authOpen.value = false
 }
 
 async function saveName() {
@@ -151,8 +167,9 @@ const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-US')
 <template>
   <section class="mt-8 border-t border-default pt-4" aria-labelledby="comments-heading">
     <h2 id="comments-heading" class="text-lg font-semibold">
-      <button type="button" class="underline" :aria-expanded="open" aria-controls="comments-panel" data-test="comments-toggle" @click="toggle">
-        {{ label }}
+      <button type="button" class="flex w-full items-center justify-between rounded border border-default px-3 py-2 text-left" :aria-expanded="open" aria-controls="comments-panel" data-test="comments-toggle" @click="toggle">
+        <span>{{ label }}</span>
+        <UIcon name="i-lucide-chevron-down" class="size-5 transition-transform" :class="{ 'rotate-180': open }" />
       </button>
     </h2>
     <div v-if="open" id="comments-panel" class="mt-3 space-y-4">
@@ -189,25 +206,9 @@ const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-US')
         <template v-if="reader.status === 'signed-out'">
           <p>Sign in to add a comment. Comments are shown after approval.</p>
           <div class="flex flex-wrap gap-2">
-            <UButton label="Continue with Google" variant="outline" data-test="signin-google" @click="oauth('google')" />
-            <UButton label="Continue with GitHub" variant="outline" data-test="signin-github" @click="oauth('github')" />
-            <UButton v-if="!emailMode" label="Use email instead" variant="ghost" data-test="signin-email" @click="openEmail" />
+            <UButton label="Sign in" icon="i-lucide-log-in" data-test="open-signin" @click="openAuth(false)" />
+            <UButton label="Create account" icon="i-lucide-user-plus" variant="outline" data-test="open-register" @click="openAuth(true)" />
           </div>
-          <form v-if="emailMode" class="space-y-2" @submit.prevent="submitEmail">
-            <label class="block">Email
-              <input v-model="email" type="email" required autocomplete="email" class="block w-full rounded border border-default bg-transparent p-1">
-            </label>
-            <label class="block">Password
-              <input v-model="password" type="password" required minlength="8" :autocomplete="register ? 'new-password' : 'current-password'" class="block w-full rounded border border-default bg-transparent p-1">
-            </label>
-            <div ref="captchaEl" />
-            <div class="flex items-center gap-3">
-              <UButton type="submit" :label="register ? 'Create account' : 'Sign in'" />
-              <button type="button" class="text-sm underline" @click="register = !register">
-                {{ register ? 'I already have an account' : 'Create an account' }}
-              </button>
-            </div>
-          </form>
         </template>
 
         <p v-else-if="reader.status === 'unconfirmed'" data-test="confirm-email">
@@ -241,5 +242,35 @@ const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-US')
         </p>
       </div>
     </div>
+
+    <UModal v-model:open="authOpen" :title="register ? 'Create an account' : 'Sign in'" description="Choose how to continue.">
+      <template #body>
+        <div class="space-y-4" data-test="auth-dialog">
+          <div class="flex flex-wrap gap-2">
+            <UButton label="Google" icon="i-simple-icons-google" variant="outline" data-test="signin-google" @click="oauth('google')" />
+            <UButton label="GitHub" icon="i-simple-icons-github" variant="outline" data-test="signin-github" @click="oauth('github')" />
+            <UButton label="Email" icon="i-lucide-mail" variant="outline" data-test="signin-email" @click="emailMode = true" />
+          </div>
+          <form v-if="emailMode" class="space-y-2" @submit.prevent="submitEmail">
+            <label class="block">Email
+              <input v-model="email" type="email" required autocomplete="email" class="block w-full rounded border border-default bg-transparent p-1">
+            </label>
+            <label class="block">Password
+              <input v-model="password" type="password" required minlength="8" :autocomplete="register ? 'new-password' : 'current-password'" class="block w-full rounded border border-default bg-transparent p-1">
+            </label>
+            <div ref="captchaEl" />
+            <div class="flex items-center gap-3">
+              <UButton type="submit" :label="register ? 'Create account' : 'Sign in'" />
+              <button type="button" class="text-sm underline" @click="register = !register">
+                {{ register ? 'I already have an account' : 'Create an account' }}
+              </button>
+            </div>
+          </form>
+          <p v-if="authMessage" :role="authIsError ? 'alert' : 'status'" aria-live="polite" :class="authIsError ? 'text-error' : ''" data-test="auth-message">
+            {{ authMessage }}
+          </p>
+        </div>
+      </template>
+    </UModal>
   </section>
 </template>

@@ -11,7 +11,8 @@ vi.mock('~/composables/useComments', () => m)
 vi.stubGlobal('useRuntimeConfig', () => ({ public: { turnstileSiteKey: '' } }))
 
 const UButton = { props: ['label'], template: '<button type="button" @click="$emit(\'click\')">{{ label }}<slot /></button>' }
-const mountIt = (enabled = true) => mount(CommentsSection, { props: { articleId: 'a1', enabled }, global: { stubs: { UButton } } })
+const UModal = { props: ['open'], template: '<div v-if="open"><slot name="body" /></div>' }
+const mountIt = (enabled = true) => mount(CommentsSection, { props: { articleId: 'a1', enabled }, global: { stubs: { UButton, UModal, UIcon: true } } })
 const comment = (o = {}) => ({ id: 'c1', author_name: 'Ann', body: 'hello', created_at: '2026-01-01T00:00:00Z', status: 'approved', user_id: 'u2', ...o })
 
 beforeEach(() => {
@@ -75,13 +76,16 @@ describe('CommentsSection', () => {
     expect(w.findAll('[data-test=comment]')).toHaveLength(1)
   })
 
-  it('signed-out shows both provider buttons and no form', async () => {
+  it('signed-out opens a dialog with both providers and email, and no comment form', async () => {
     const w = mountIt()
     await flushPromises()
     await w.get('[data-test=comments-toggle]').trigger('click')
     await flushPromises()
+    expect(w.find('[data-test=signin-google]').exists()).toBe(false)
+    await w.get('[data-test=open-register]').trigger('click')
     expect(w.find('[data-test=signin-google]').exists()).toBe(true)
     expect(w.find('[data-test=signin-github]').exists()).toBe(true)
+    expect(w.find('[data-test=signin-email]').exists()).toBe(true)
     expect(w.find('[data-test=comment-form]').exists()).toBe(false)
   })
 
