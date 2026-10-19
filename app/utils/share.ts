@@ -1,11 +1,12 @@
-const MD_IMAGE = /!\[[^\]]*\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/
-const HTML_IMAGE = /<img\b[^>]*?\bsrc\s*=\s*["']([^"']+)["']/i
+const MD_IMAGE = /!\[[^\]]*\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g
+const HTML_IMAGE = /<img\b[^>]*?\bsrc\s*=\s*["']([^"']+)["']/gi
 
+// Pasted images are often inline data: URIs, which link previews cannot use.
 export function firstImage(body: string): string | null {
-  const md = MD_IMAGE.exec(body)
-  const html = HTML_IMAGE.exec(body)
-  const hit = [md, html].filter(Boolean).sort((a, b) => a!.index - b!.index)[0]
-  return hit?.[1] ?? null
+  const hits = [...body.matchAll(MD_IMAGE), ...body.matchAll(HTML_IMAGE)]
+    .filter(m => !/^data:/i.test(m[1]!))
+    .sort((a, b) => a.index - b.index)
+  return hits[0]?.[1] ?? null
 }
 
 // Link previews need absolute URLs. `base` is the site origin plus the app base path.

@@ -11,6 +11,10 @@ describe('firstImage', () => {
   it('returns the earliest of the two', () => {
     expect(firstImage('<img src="/h.png"> ![m](/m.png)')).toBe('/h.png')
   })
+  it('skips inline data: images', () => {
+    expect(firstImage('![a](data:image/png;base64,AAAA) ![b](https://x.test/b.png)')).toBe('https://x.test/b.png')
+    expect(firstImage('<img src="data:image/jpeg;base64,AAAA">')).toBeNull()
+  })
   it('returns null without images', () => {
     expect(firstImage('just text')).toBeNull()
   })
