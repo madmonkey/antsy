@@ -15,7 +15,7 @@ const id = route.params.id === 'new' ? null : String(route.params.id)
 const draftKey = `admin-draft:${id ?? 'new'}`
 
 const topics = ref<AdminTopic[]>([])
-const form = reactive({ topic_id: '', title: '', slug: '', is_active: false })
+const form = reactive({ topic_id: '', title: '', slug: '', is_active: false, comments_enabled: true })
 const body = ref('')
 const tags = ref<string[]>([])
 const images = ref<EmbeddedImage[]>([])
@@ -43,7 +43,7 @@ onMounted(async () => {
     } else if (id) {
       const a = await getAdminArticle(id)
       if (!a) { state.value = 'missing'; return }
-      Object.assign(form, { topic_id: a.topic_id, title: a.title, slug: a.slug, is_active: a.is_active })
+      Object.assign(form, { topic_id: a.topic_id, title: a.title, slug: a.slug, is_active: a.is_active, comments_enabled: a.comments_enabled ?? true })
       tags.value = a.tags ?? []
       const c = collapseImages(a.body)
       body.value = c.body
@@ -133,6 +133,7 @@ const fieldError = (f: string) => (failure.value?.field === f ? failure.value.me
       <MarkdownEditor v-model="body" v-model:images="images" />
       <p v-if="fieldError('body')" role="alert" class="text-error" data-test="error-body">{{ fieldError('body') }}</p>
       <label class="flex items-center gap-2"><input v-model="form.is_active" type="checkbox" data-test="article-active"> Active (visible to the public)</label>
+      <label class="flex items-center gap-2"><input v-model="form.comments_enabled" type="checkbox" data-test="article-comments"> Allow comments</label>
       <p v-if="failure && !failure.field" role="alert" class="text-error" data-test="error-form">{{ failure.message }}</p>
       <p v-if="saved" role="status" data-test="saved">Saved.</p>
       <div class="flex gap-2">

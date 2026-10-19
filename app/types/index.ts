@@ -16,6 +16,7 @@ export interface Article {
   excerpt: string
   body: string
   tags: string[]
+  comments_enabled: boolean
   is_active: boolean
   published_at: string | null
   created_at: string
@@ -34,6 +35,21 @@ export interface ArticleSummary {
 export interface SearchResult extends ArticleSummary {
   topic_name: string
   topic_slug: string
+}
+
+export interface Comment {
+  id: string
+  author_name: string
+  body: string
+  created_at: string
+  status: 'pending' | 'approved' | 'rejected'
+  user_id?: string
+}
+
+export interface CommenterProfile {
+  user_id: string
+  display_name: string
+  is_blocked: boolean
 }
 
 export interface PreviewArticle extends ArticleSummary {

@@ -13,6 +13,9 @@ async function signOut() {
       <NuxtLink to="/admin" class="px-2 underline">
         Admin
       </NuxtLink>
+      <NuxtLink to="/admin/comments" class="px-2 underline">
+        Comments
+      </NuxtLink>
       <UButton label="Sign out" variant="outline" @click="signOut" />
     </SiteHeader>
     <main class="mx-auto max-w-5xl p-6">

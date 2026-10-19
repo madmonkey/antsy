@@ -23,6 +23,8 @@ useSeoMeta({
       :topic="article.topic"
       :published-at="article.published_at"
       :tags="article.tags"
+      :article-id="article.id"
+      :comments-enabled="article.comments_enabled"
     />
   </StateMessage>
   </div>

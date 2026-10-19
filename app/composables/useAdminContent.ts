@@ -99,7 +99,7 @@ export async function deleteTopic(id: string) {
   return error ? describeFailure(error, 'topics') : null
 }
 
-export async function saveArticle(id: string | null, fields: Pick<Article, 'topic_id' | 'title' | 'slug' | 'excerpt' | 'body' | 'tags' | 'is_active'>) {
+export async function saveArticle(id: string | null, fields: Pick<Article, 'topic_id' | 'title' | 'slug' | 'excerpt' | 'body' | 'tags' | 'comments_enabled' | 'is_active'>) {
   const sb = await useSupabase()
   const q = sb.from('content_items')
   const { error } = id ? await q.update(fields).eq('id', id) : await q.insert(fields)
@@ -110,4 +110,58 @@ export async function deleteArticle(id: string) {
   const sb = await useSupabase()
   const { error } = await sb.from('content_items').delete().eq('id', id)
   return error ? describeFailure(error, 'content_items') : null
+}
+
+export interface ModerationComment {
+  id: string
+  user_id: string
+  author_name: string
+  body: string
+  status: 'pending' | 'approved' | 'rejected'
+  created_at: string
+  article: { title: string, slug: string } | null
+}
+
+export async function listCommentsForModeration(status: ModerationComment['status']) {
+  const sb = await useSupabase()
+  const { data, error } = await sb.from('comments')
+    .select('id, user_id, author_name, body, status, created_at, article:content_items(title, slug)')
+    .eq('status', status).order('created_at', { ascending: true })
+  if (error) throw error
+  return data as unknown as ModerationComment[]
+}
+
+export async function setCommentStatus(id: string, status: 'approved' | 'rejected') {
+  const sb = await useSupabase()
+  const { error } = await sb.from('comments').update({ status }).eq('id', id)
+  return error ? error.message : null
+}
+
+export async function deleteComment(id: string) {
+  const sb = await useSupabase()
+  const { error } = await sb.from('comments').delete().eq('id', id)
+  return error ? error.message : null
+}
+
+export async function setCommenterBlocked(userId: string, blocked: boolean) {
+  const sb = await useSupabase()
+  const { error } = await sb.from('commenter_profiles').update({ is_blocked: blocked }).eq('user_id', userId)
+  return error ? error.message : null
+}
+
+export async function listBlockedUserIds(userIds: string[]) {
+  if (!userIds.length) return new Set<string>()
+  const sb = await useSupabase()
+  const { data } = await sb.from('commenter_profiles').select('user_id').eq('is_blocked', true).in('user_id', userIds)
+  return new Set((data ?? []).map(r => r.user_id as string))
+}
+
+export async function countPendingComments() {
+  try {
+    const sb = await useSupabase()
+    const { count, error } = await sb.from('comments').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+    return error ? null : count
+  } catch {
+    return null
+  }
 }

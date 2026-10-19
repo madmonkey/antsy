@@ -35,6 +35,7 @@ export default defineNuxtConfig({
     public: {
       supabaseUrl: '',
       supabasePublishableKey: '',
+      turnstileSiteKey: '',
       analyticsProvider: '',
       analyticsId: '',
       analyticsHost: '',

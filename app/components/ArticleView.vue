@@ -8,6 +8,8 @@ defineProps<{
   topic: { name: string, slug: string }
   publishedAt: string | null
   tags?: string[]
+  articleId?: string
+  commentsEnabled?: boolean
   images?: EmbeddedImage[]
   preview?: boolean
 }>()
@@ -29,5 +31,6 @@ defineProps<{
     </h1>
     <TagChips :tags="tags" />
     <ArticleBody :markdown="body" :images="images" />
+    <CommentsSection v-if="!preview && articleId" :article-id="articleId" :enabled="commentsEnabled !== false" />
   </article>
 </template>

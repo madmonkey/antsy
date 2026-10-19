@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { listAdminArticles, listAdminTopics, type AdminArticleRow, type AdminTopic } from '~/composables/useAdminContent'
+import { listAdminArticles, listAdminTopics, countPendingComments, type AdminArticleRow, type AdminTopic } from '~/composables/useAdminContent'
 
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 useSeoMeta({ title: 'Administration', robots: 'noindex' })
@@ -9,6 +9,7 @@ const topics = ref<AdminTopic[]>([])
 const articles = ref<AdminArticleRow[]>([])
 const loading = ref(true)
 const failed = ref(false)
+const pending = ref<number | null>(null)
 
 async function load() {
   loading.value = true
@@ -18,6 +19,7 @@ async function load() {
   } catch {
     failed.value = true
   }
+  pending.value = await countPendingComments()
   loading.value = false
 }
 onMounted(load)
@@ -37,6 +39,11 @@ const topicName = computed(() => new Map(topics.value.map(t => [t.id, t.name])))
       The lists could not be loaded. <UButton label="Retry" size="xs" @click="load" />
     </p>
     <template v-else>
+      <p>
+        <NuxtLink to="/admin/comments" class="underline" data-test="manage-comments">
+          Comments{{ pending === null ? '' : ` (${pending} awaiting approval)` }}
+        </NuxtLink>
+      </p>
       <section>
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-semibold">
