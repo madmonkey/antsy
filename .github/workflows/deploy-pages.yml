@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  repository_dispatch:
+    types: [content-changed]
   schedule:
     - cron: '17 6 * * *'
 
