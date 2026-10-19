@@ -22,6 +22,7 @@ useSeoMeta({
       :body="article.body"
       :topic="article.topic"
       :published-at="article.published_at"
+      :tags="article.tags"
     />
   </StateMessage>
   </div>

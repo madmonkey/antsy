@@ -5,6 +5,7 @@ import {
 } from '~/composables/useAdminContent'
 import { collapseImages, expandImages, type EmbeddedImage } from '~/utils/embed-image'
 import { isValidSlug, makeExcerpt, slugify } from '~/utils/excerpt'
+import { normaliseTag, normaliseTags } from '~/utils/tags'
 
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 useSeoMeta({ title: 'Article', robots: 'noindex' })
@@ -16,6 +17,7 @@ const draftKey = `admin-draft:${id ?? 'new'}`
 const topics = ref<AdminTopic[]>([])
 const form = reactive({ topic_id: '', title: '', slug: '', is_active: false })
 const body = ref('')
+const tags = ref<string[]>([])
 const images = ref<EmbeddedImage[]>([])
 const published = ref(false)
 const publishedAt = ref<string | null>(null)
@@ -33,6 +35,7 @@ onMounted(async () => {
       const d = JSON.parse(draft)
       Object.assign(form, d.form)
       body.value = d.body
+      tags.value = d.tags ?? []
       images.value = d.images
       published.value = d.published
       slugTouched.value = true
@@ -41,6 +44,7 @@ onMounted(async () => {
       const a = await getAdminArticle(id)
       if (!a) { state.value = 'missing'; return }
       Object.assign(form, { topic_id: a.topic_id, title: a.title, slug: a.slug, is_active: a.is_active })
+      tags.value = a.tags ?? []
       const c = collapseImages(a.body)
       body.value = c.body
       images.value = c.images
@@ -63,7 +67,7 @@ function onTitle() {
 async function fail(f: WriteFailure) {
   failure.value = f
   if (f.kind === 'session') {
-    sessionStorage.setItem(draftKey, JSON.stringify({ form, body: body.value, images: images.value, published: published.value }))
+    sessionStorage.setItem(draftKey, JSON.stringify({ form, tags: tags.value, body: body.value, images: images.value, published: published.value }))
     await navigateTo('/admin/login?ended=1')
   }
 }
@@ -77,7 +81,7 @@ async function save() {
   if (!body.value.trim()) return fail({ kind: 'field', field: 'body', message: 'Enter the article text.' })
   if (!form.topic_id) return fail({ kind: 'other', message: 'Create a topic first.' })
   // shortcut: last write wins, add a version check if concurrent admins appear
-  const f = await saveArticle(id, { ...form, excerpt: makeExcerpt(body.value), body: expandImages(body.value, images.value) })
+  const f = await saveArticle(id, { ...form, tags: normaliseTags(tags.value), excerpt: makeExcerpt(body.value), body: expandImages(body.value, images.value) })
   if (f) return fail(f)
   saved.value = true
   if (!id) await navigateTo('/admin')
@@ -122,6 +126,10 @@ const fieldError = (f: string) => (failure.value?.field === f ? failure.value.me
       </label>
       <p v-if="published" class="text-sm">Published addresses are permanent.</p>
       <p v-if="fieldError('slug')" role="alert" class="text-error" data-test="error-slug">{{ fieldError('slug') }}</p>
+      <label class="block">Tags (press Enter to add, up to 20)
+        <UInputTags v-model="tags" class="block w-full" data-test="article-tags" :convert-value="(v: string) => normaliseTag(v) ?? ''" />
+      </label>
+      <p v-if="fieldError('tags')" role="alert" class="text-error" data-test="error-tags">{{ fieldError('tags') }}</p>
       <MarkdownEditor v-model="body" v-model:images="images" />
       <p v-if="fieldError('body')" role="alert" class="text-error" data-test="error-body">{{ fieldError('body') }}</p>
       <label class="flex items-center gap-2"><input v-model="form.is_active" type="checkbox" data-test="article-active"> Active (visible to the public)</label>
@@ -141,6 +149,7 @@ const fieldError = (f: string) => (failure.value?.field === f ? failure.value.me
           :title="form.title || 'Untitled'"
           :body="body"
           :images="images"
+          :tags="tags"
           :topic="topics.find(t => t.id === form.topic_id) ?? { name: '', slug: '' }"
           :published-at="publishedAt ?? new Date().toISOString()"
         />

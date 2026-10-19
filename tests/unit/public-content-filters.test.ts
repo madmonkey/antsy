@@ -39,7 +39,7 @@ beforeEach(() => {
 describe('public content queries', () => {
   it('requires active, published articles from active topics in topic lists', async () => {
     await fetchTopicArticles('topic-id')
-    expect(calls.some(call => call.method === 'select' && call.args[0] === 'id, title, slug, excerpt, published_at, topic:topics!inner(is_active)')).toBe(true)
+    expect(calls.some(call => call.method === 'select' && call.args[0] === 'id, title, slug, excerpt, tags, published_at, topic:topics!inner(is_active)')).toBe(true)
     expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['is_active', true] })
     expect(calls).toContainEqual({ table: 'content_items', method: 'eq', args: ['topic.is_active', true] })
     expect(calls).toContainEqual({ table: 'content_items', method: 'not', args: ['published_at', 'is', null] })

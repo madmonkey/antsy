@@ -15,6 +15,7 @@ export interface Article {
   slug: string
   excerpt: string
   body: string
+  tags: string[]
   is_active: boolean
   published_at: string | null
   created_at: string
@@ -26,7 +27,13 @@ export interface ArticleSummary {
   title: string
   slug: string
   excerpt: string
+  tags: string[]
   published_at: string | null
+}
+
+export interface SearchResult extends ArticleSummary {
+  topic_name: string
+  topic_slug: string
 }
 
 export interface PreviewArticle extends ArticleSummary {

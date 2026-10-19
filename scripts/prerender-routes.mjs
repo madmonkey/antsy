@@ -35,7 +35,7 @@ async function slugs(table) {
 const [topics, articles] = [await slugs('topics'), await slugs('content_items')]
 if (!topics.length) fail('no active topics found; refusing to publish an empty snapshot')
 
-const routes = ['/', ...topics.map(s => `/topics/${s}`), ...articles.map(s => `/articles/${s}`)]
+const routes = ['/', '/search', ...topics.map(s => `/topics/${s}`), ...articles.map(s => `/articles/${s}`)]
 mkdirSync('.data', { recursive: true })
 writeFileSync('.data/routes.json', JSON.stringify(routes, null, 2))
 console.log(`prerender-routes: ${routes.length} routes (${topics.length} topics, ${articles.length} articles)`)

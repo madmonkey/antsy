@@ -6,7 +6,14 @@ import type { Article, Topic } from '~/types'
 export type AdminTopic = Omit<Topic, 'published_at'> & { published_at: string | null }
 export type AdminArticleRow = Pick<Article, 'id' | 'topic_id' | 'title' | 'slug' | 'is_active' | 'published_at'>
 
-export interface WriteFailure { kind: 'field' | 'session' | 'other', field?: 'name' | 'slug' | 'title' | 'body', message: string }
+export async function listTags() {
+  const sb = await useSupabase()
+  const { data, error } = await sb.rpc('list_tags')
+  if (error) throw error
+  return (data as { tag: string }[]).map(r => r.tag)
+}
+
+export interface WriteFailure { kind: 'field' | 'session' | 'other', field?: 'name' | 'slug' | 'title' | 'body' | 'tags', message: string }
 
 // Maps database errors onto the error contract: field-level messages, or a lost session.
 export async function describeFailure(e: PostgrestError | { message: string, code?: string, status?: number }, table: 'topics' | 'content_items', slug?: string): Promise<WriteFailure> {
@@ -14,6 +21,9 @@ export async function describeFailure(e: PostgrestError | { message: string, cod
   const msg = e.message ?? ''
   if (code === '42501' || code === 'PGRST301' || ('status' in e && (e.status === 401 || e.status === 403)) || /jwt/i.test(msg)) {
     return { kind: 'session', message: 'Your session ended. Sign in again; your draft is kept.' }
+  }
+  if (/at most 20 tags|each tag must/i.test(msg)) {
+    return { kind: 'field', field: 'tags', message: msg.replace(/^.*?(At most|Each tag)/, '$1') }
   }
   if (/published addresses are permanent/i.test(msg)) {
     return { kind: 'field', field: 'slug', message: 'Published addresses are permanent and cannot be changed.' }
@@ -76,7 +86,7 @@ export async function deleteTopic(id: string) {
   return error ? describeFailure(error, 'topics') : null
 }
 
-export async function saveArticle(id: string | null, fields: Pick<Article, 'topic_id' | 'title' | 'slug' | 'excerpt' | 'body' | 'is_active'>) {
+export async function saveArticle(id: string | null, fields: Pick<Article, 'topic_id' | 'title' | 'slug' | 'excerpt' | 'body' | 'tags' | 'is_active'>) {
   const sb = await useSupabase()
   const q = sb.from('content_items')
   const { error } = id ? await q.update(fields).eq('id', id) : await q.insert(fields)

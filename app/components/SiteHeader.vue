@@ -51,6 +51,7 @@ const avatarSrc = computed(() => {
       </NuxtLink>
       <span role="status" class="sr-only">{{ isAdmin ? 'Admin session active' : '' }}</span>
       <div class="flex items-center gap-1">
+        <SearchBox />
         <SocialLinks v-if="site.social.length" :links="site.social" />
         <ThemeToggle />
         <slot />

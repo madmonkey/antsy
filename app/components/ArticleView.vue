@@ -7,6 +7,7 @@ defineProps<{
   body: string
   topic: { name: string, slug: string }
   publishedAt: string | null
+  tags?: string[]
   images?: EmbeddedImage[]
   preview?: boolean
 }>()
@@ -26,6 +27,7 @@ defineProps<{
     <h1 class="text-3xl font-bold">
       {{ title }}
     </h1>
+    <TagChips :tags="tags" />
     <ArticleBody :markdown="body" :images="images" />
   </article>
 </template>

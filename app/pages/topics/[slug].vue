@@ -43,6 +43,7 @@ const formatDate = (iso: string | null) => (iso ? new Date(iso).toLocaleDateStri
           <p v-if="a.excerpt">
             {{ a.excerpt }}
           </p>
+          <TagChips :tags="a.tags" class="mt-1" />
         </li>
       </ul>
     </div>
