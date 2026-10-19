@@ -6,6 +6,19 @@ import type { Article, Topic } from '~/types'
 export type AdminTopic = Omit<Topic, 'published_at'> & { published_at: string | null }
 export type AdminArticleRow = Pick<Article, 'id' | 'topic_id' | 'title' | 'slug' | 'is_active' | 'published_at'>
 
+export async function getAdminSetting(key: string) {
+  const sb = await useSupabase()
+  const { data, error } = await sb.from('admin_settings').select('value').eq('key', key).maybeSingle()
+  if (error) return null
+  return (data?.value as string | undefined) ?? null
+}
+
+export async function saveAdminSetting(key: string, value: string) {
+  const sb = await useSupabase()
+  const { error } = await sb.from('admin_settings').upsert({ key, value })
+  return error ? error.message : null
+}
+
 export async function listTags() {
   const sb = await useSupabase()
   const { data, error } = await sb.rpc('list_tags')

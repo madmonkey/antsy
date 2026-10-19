@@ -34,7 +34,11 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       supabaseUrl: '',
-      supabasePublishableKey: ''
+      supabasePublishableKey: '',
+      analyticsProvider: '',
+      analyticsId: '',
+      analyticsHost: '',
+      analyticsDashboard: ''
     }
   },
   nitro: {

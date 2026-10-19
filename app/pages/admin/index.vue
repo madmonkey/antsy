@@ -77,5 +77,6 @@ const topicName = computed(() => new Map(topics.value.map(t => [t.id, t.name])))
         </p>
       </section>
     </template>
+    <TrafficCard />
   </div>
 </template>
