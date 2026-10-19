@@ -11,7 +11,7 @@ onNuxtReady(() => refresh()) // onMounted fires while hydrating, when refresh() 
 const config = useRuntimeConfig()
 const siteBase = `${String(config.public.siteUrl).replace(/\/$/, '')}${config.app.baseURL}`
 const { site } = useAppConfig()
-const shareImage = computed(() => absoluteUrl(firstImage(article.value?.body ?? '') ?? site.avatar, siteBase))
+const shareImage = computed(() => absoluteUrl(article.value?.cover_image || firstImage(article.value?.body ?? '') || site.avatar, siteBase))
 const shareDescription = computed(() => article.value?.excerpt || article.value?.title || '')
 
 useSeoMeta({

@@ -5,8 +5,8 @@ import {
 } from '~/utils/embed-image'
 import { renderPreview } from '~/utils/markdown'
 
-const props = defineProps<{ modelValue: string, images: EmbeddedImage[] }>()
-const emit = defineEmits<{ 'update:modelValue': [string], 'update:images': [EmbeddedImage[]] }>()
+const props = defineProps<{ modelValue: string, images: EmbeddedImage[], coverId?: number | null }>()
+const emit = defineEmits<{ 'update:modelValue': [string], 'update:images': [EmbeddedImage[]], 'update:coverId': [number | null] }>()
 
 const area = ref<HTMLTextAreaElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -131,6 +131,7 @@ function startReplace(id: number) {
         <label class="flex items-center gap-1 text-sm">Alt text
           <input :value="altOf(img.id)" class="rounded border border-default px-1" :data-test="`alt-${img.id}`" @input="setAlt(img.id, ($event.target as HTMLInputElement).value)">
         </label>
+        <UButton :label="coverId === img.id ? 'Cover image ✓' : 'Use as cover'" size="xs" :variant="coverId === img.id ? 'solid' : 'outline'" :data-test="`cover-${img.id}`" @click="emit('update:coverId', coverId === img.id ? null : img.id)" />
         <UButton label="Replace" size="xs" variant="outline" @click="startReplace(img.id)" />
         <UButton label="Remove" size="xs" variant="outline" color="error" @click="remove(img.id)" />
       </li>

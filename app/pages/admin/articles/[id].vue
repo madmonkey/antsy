@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import {
-  deleteArticle, getAdminArticle, listAdminTopics, saveArticle, type AdminTopic, type WriteFailure
+  deleteArticle, getAdminArticle, listAdminTopics, saveArticle, uploadArticleImage, type AdminTopic, type WriteFailure
 } from '~/composables/useAdminContent'
 import { collapseImages, expandImages, type EmbeddedImage } from '~/utils/embed-image'
 import { isValidSlug, makeExcerpt, slugify } from '~/utils/excerpt'
@@ -19,6 +19,9 @@ const form = reactive({ topic_id: '', title: '', slug: '', is_active: false, com
 const body = ref('')
 const tags = ref<string[]>([])
 const images = ref<EmbeddedImage[]>([])
+const coverId = ref<number | null>(null)
+const coverUrl = ref('')
+watch(images, (list) => { if (coverId.value !== null && !list.some(i => i.id === coverId.value)) coverId.value = null })
 const published = ref(false)
 const publishedAt = ref<string | null>(null)
 const previewing = ref(false)
@@ -45,6 +48,7 @@ onMounted(async () => {
       if (!a) { state.value = 'missing'; return }
       Object.assign(form, { topic_id: a.topic_id, title: a.title, slug: a.slug, is_active: a.is_active, comments_enabled: a.comments_enabled ?? true })
       tags.value = a.tags ?? []
+      coverUrl.value = a.cover_image ?? ''
       const c = collapseImages(a.body)
       body.value = c.body
       images.value = c.images
@@ -81,8 +85,26 @@ async function save() {
   if (!body.value.trim()) return fail({ kind: 'field', field: 'body', message: 'Enter the article text.' })
   if (!form.topic_id) return fail({ kind: 'other', message: 'Create a topic first.' })
   // shortcut: last write wins, add a version check if concurrent admins appear
-  const f = await saveArticle(id, { ...form, tags: normaliseTags(tags.value), excerpt: makeExcerpt(body.value), body: expandImages(body.value, images.value) })
+  let finalBody = body.value
+  let finalImages = images.value
+  let cover = coverUrl.value
+  const pick = images.value.find(i => i.id === coverId.value)
+  if (pick) {
+    const up = await uploadArticleImage(pick.dataUri)
+    if ('error' in up) return fail({ kind: 'other', message: up.error })
+    cover = up.url
+    // Swap the embedded copy for the stored file so the article text stays small.
+    finalBody = finalBody.replace(new RegExp(`\\]\\(embedded:${pick.id}\\)`, 'g'), `](${up.url})`)
+    finalImages = images.value.filter(i => i.id !== pick.id)
+  }
+  const f = await saveArticle(id, { ...form, tags: normaliseTags(tags.value), excerpt: makeExcerpt(body.value), body: expandImages(finalBody, finalImages), cover_image: cover || null })
   if (f) return fail(f)
+  if (pick) {
+    body.value = finalBody
+    images.value = finalImages
+    coverUrl.value = cover
+    coverId.value = null
+  }
   saved.value = true
   if (!id) await navigateTo('/admin')
 }
@@ -130,7 +152,12 @@ const fieldError = (f: string) => (failure.value?.field === f ? failure.value.me
         <UInputTags v-model="tags" class="block w-full" data-test="article-tags" :convert-value="(v: string) => normaliseTag(v) ?? ''" />
       </label>
       <p v-if="fieldError('tags')" role="alert" class="text-error" data-test="error-tags">{{ fieldError('tags') }}</p>
-      <MarkdownEditor v-model="body" v-model:images="images" />
+      <MarkdownEditor v-model="body" v-model:images="images" v-model:cover-id="coverId" />
+      <p v-if="coverUrl" class="flex items-center gap-2 text-sm" data-test="current-cover">
+        <img :src="coverUrl" alt="" class="h-10 w-10 rounded object-cover">
+        Cover image (used for link previews)
+        <button type="button" class="underline" @click="coverUrl = ''">Remove</button>
+      </p>
       <p v-if="fieldError('body')" role="alert" class="text-error" data-test="error-body">{{ fieldError('body') }}</p>
       <label class="flex items-center gap-2"><input v-model="form.is_active" type="checkbox" data-test="article-active"> Active (visible to the public)</label>
       <label class="flex items-center gap-2"><input v-model="form.comments_enabled" type="checkbox" data-test="article-comments"> Allow comments</label>

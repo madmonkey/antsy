@@ -99,11 +99,21 @@ export async function deleteTopic(id: string) {
   return error ? describeFailure(error, 'topics') : null
 }
 
-export async function saveArticle(id: string | null, fields: Pick<Article, 'topic_id' | 'title' | 'slug' | 'excerpt' | 'body' | 'tags' | 'comments_enabled' | 'is_active'>) {
+export async function saveArticle(id: string | null, fields: Pick<Article, 'topic_id' | 'title' | 'slug' | 'excerpt' | 'body' | 'tags' | 'comments_enabled' | 'cover_image' | 'is_active'>) {
   const sb = await useSupabase()
   const q = sb.from('content_items')
   const { error } = id ? await q.update(fields).eq('id', id) : await q.insert(fields)
   return error ? describeFailure(error, 'content_items', fields.slug) : null
+}
+
+// Moves an embedded image into storage and returns its public URL.
+export async function uploadArticleImage(dataUri: string): Promise<{ url: string } | { error: string }> {
+  const blob = await (await fetch(dataUri)).blob()
+  const path = `${crypto.randomUUID()}.${blob.type.split('/')[1]}`
+  const sb = await useSupabase()
+  const { error } = await sb.storage.from('article-images').upload(path, blob, { contentType: blob.type, cacheControl: '31536000' })
+  if (error) return { error: 'The cover image could not be uploaded. Try again.' }
+  return { url: sb.storage.from('article-images').getPublicUrl(path).data.publicUrl }
 }
 
 export async function deleteArticle(id: string) {

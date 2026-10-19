@@ -17,6 +17,7 @@ export interface Article {
   body: string
   tags: string[]
   comments_enabled: boolean
+  cover_image: string | null
   is_active: boolean
   published_at: string | null
   created_at: string

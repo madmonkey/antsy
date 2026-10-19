@@ -17,11 +17,11 @@ export async function fetchArticleBySlug(slug: string) {
   const sb = await useSupabase()
   const { data, error } = await sb
     .from('content_items')
-    .select('id, title, slug, excerpt, body, tags, comments_enabled, published_at, topic:topics!inner(name, slug)')
+    .select('id, title, slug, excerpt, body, tags, comments_enabled, cover_image, published_at, topic:topics!inner(name, slug)')
     .eq('slug', slug).eq('is_active', true).not('published_at', 'is', null)
     .eq('topic.is_active', true).maybeSingle()
   if (error) throw error
-  return data as unknown as (Pick<Article, 'id' | 'title' | 'slug' | 'excerpt' | 'body' | 'tags' | 'comments_enabled' | 'published_at'> & { topic: { name: string, slug: string } }) | null
+  return data as unknown as (Pick<Article, 'id' | 'title' | 'slug' | 'excerpt' | 'body' | 'tags' | 'comments_enabled' | 'cover_image' | 'published_at'> & { topic: { name: string, slug: string } }) | null
 }
 
 export async function fetchPreviewArticles(count: number) {
