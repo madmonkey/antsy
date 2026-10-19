@@ -15,12 +15,12 @@ export function useAdminSession() {
     return !!data
   }
 
-  async function signIn(email: string, password: string): Promise<{ error?: string, retryAt?: number }> {
+  async function signIn(email: string, password: string, captchaToken?: string): Promise<{ error?: string, retryAt?: number }> {
     const gate = checkThrottle(localStorage)
     if (gate.blocked) return { error: 'Too many failed attempts.', retryAt: gate.retryAt }
 
     const client = await sb()
-    const { error } = await client.auth.signInWithPassword({ email, password })
+    const { error } = await client.auth.signInWithPassword({ email, password, options: { captchaToken } })
     if (error) {
       recordFailure(localStorage)
       const after = checkThrottle(localStorage)

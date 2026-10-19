@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { renderCaptcha } from '~/composables/useComments'
 useSeoMeta({ title: 'Administration sign-in', robots: 'noindex' })
 
 const route = useRoute()
@@ -9,12 +10,24 @@ const error = ref('')
 const retryAt = ref<number>()
 const busy = ref(false)
 
+const siteKey = String(useRuntimeConfig().public.turnstileSiteKey || '')
+const captchaEl = ref<HTMLElement | null>(null)
+const captchaToken = ref('')
+onMounted(async () => {
+  if (siteKey && captchaEl.value) await renderCaptcha(captchaEl.value, siteKey, (t) => { captchaToken.value = t })
+})
+
 const retryTime = computed(() => (retryAt.value ? new Date(retryAt.value).toLocaleTimeString('en-US') : ''))
 
 async function submit() {
   busy.value = true
   error.value = ''
-  const result = await session.signIn(email.value.trim(), password.value)
+  if (siteKey && !captchaToken.value) {
+    busy.value = false
+    error.value = 'Complete the security check first.'
+    return
+  }
+  const result = await session.signIn(email.value.trim(), password.value, captchaToken.value)
   busy.value = false
   if (result.error) {
     error.value = result.error
@@ -41,6 +54,7 @@ async function submit() {
       <label for="password" class="block">Password</label>
       <input id="password" v-model="password" type="password" autocomplete="current-password" required class="w-full rounded border border-default bg-default p-2">
     </div>
+    <div ref="captchaEl" />
     <p v-if="error" role="alert" data-test="error">
       {{ error }}<template v-if="retryTime"> Try again after {{ retryTime }}.</template>
     </p>
