@@ -1,6 +1,7 @@
 import type { PostgrestError } from '@supabase/supabase-js'
 import { useSupabase } from '~/composables/useSupabase'
 import { suggestFreeSlug } from '~/utils/excerpt'
+import { sniffImageType, toDataUri } from '~/utils/embed-image'
 import type { Article, Topic } from '~/types'
 
 export type AdminTopic = Omit<Topic, 'published_at'> & { published_at: string | null }
@@ -104,6 +105,27 @@ export async function saveArticle(id: string | null, fields: Pick<Article, 'topi
   const q = sb.from('content_items')
   const { error } = id ? await q.update(fields).eq('id', id) : await q.insert(fields)
   return error ? describeFailure(error, 'content_items', fields.slug) : null
+}
+
+const IMAGE_PATH = /\/article-images\/([^/?#]+)$/
+
+export async function deleteArticleImages(urls: string[]) {
+  const paths = urls.map(u => IMAGE_PATH.exec(u)?.[1]).filter((p): p is string => !!p)
+  if (!paths.length) return
+  const sb = await useSupabase()
+  await sb.storage.from('article-images').remove(paths)
+}
+
+// Brings a stored image back as an embedded data URI.
+export async function reembedImage(url: string): Promise<{ dataUri: string, bytes: number } | { error: string }> {
+  try {
+    const bytes = new Uint8Array(await (await fetch(url)).arrayBuffer())
+    const mime = sniffImageType(bytes)
+    if (!mime) return { error: 'A stored image could not be read back. Try again.' }
+    return { dataUri: toDataUri(bytes, mime), bytes: bytes.length }
+  } catch {
+    return { error: 'A stored image could not be read back. Try again.' }
+  }
 }
 
 // Moves an embedded image into storage and returns its public URL.

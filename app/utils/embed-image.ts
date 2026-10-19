@@ -8,6 +8,9 @@ export interface EmbeddedImage {
   id: number
   dataUri: string
   bytes: number
+  // Set once the image lives in Supabase Storage; `store` is the admin's choice to keep it there.
+  url?: string
+  store?: boolean
 }
 
 const ascii = (b: Uint8Array, from: number, text: string) => [...text].every((c, i) => b[from + i] === c.charCodeAt(0))
@@ -41,10 +44,21 @@ const DATA_IMAGE_MD = /!\[([^\]]*)\]\((data:image\/(?:png|jpeg|gif|webp);base64,
 
 const rawBytes = (base64: string) => Math.floor(base64.length * 3 / 4) - (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0)
 
-// On load: swap stored data URIs for short `embedded:n` tokens so the text area stays readable.
+const IMAGE_MD = new RegExp(
+  `${DATA_IMAGE_MD.source}|!\\[([^\\]]*)\\]\\((https?://[^)\\s]*/storage/v1/object/public/article-images/[^)\\s]+)\\)`,
+  'g'
+)
+
+// On load: swap stored data URIs and storage links for short `embedded:n` tokens so the text area stays readable.
 export function collapseImages(body: string): { body: string, images: EmbeddedImage[] } {
   const images: EmbeddedImage[] = []
-  const collapsed = body.replace(DATA_IMAGE_MD, (_m, alt: string, dataUri: string, b64: string) => {
+  const collapsed = body.replace(IMAGE_MD, (_m, alt: string, dataUri: string, b64: string, alt2: string, url: string) => {
+    if (url) {
+      const known = images.find(i => i.url === url)
+      const id = known?.id ?? images.length + 1
+      if (!known) images.push({ id, dataUri: url, bytes: 0, url, store: true })
+      return `![${alt2}](embedded:${id})`
+    }
     const id = images.length + 1
     images.push({ id, dataUri, bytes: rawBytes(b64) })
     return `![${alt}](embedded:${id})`
@@ -56,7 +70,7 @@ export function collapseImages(body: string): { body: string, images: EmbeddedIm
 export function expandImages(body: string, images: EmbeddedImage[]): string {
   return body.replace(/\]\(embedded:(\d+)\)/g, (m, n: string) => {
     const img = images.find(i => i.id === Number(n))
-    return img ? `](${img.dataUri})` : m
+    return img ? `](${img.url ?? img.dataUri})` : m
   })
 }
 

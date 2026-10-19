@@ -53,6 +53,15 @@ describe('embedded tokens', () => {
     expect(nextImageId(images)).toBe(2)
   })
 
+  it('treats stored images as tokens too and expands them back to their link', () => {
+    const url = 'https://p.supabase.co/storage/v1/object/public/article-images/a.png'
+    const stored = `![a](${url}) and ![b](${url})`
+    const { body, images } = collapseImages(stored)
+    expect(body).toBe('![a](embedded:1) and ![b](embedded:1)')
+    expect(images).toEqual([{ id: 1, dataUri: url, bytes: 0, url, store: true }])
+    expect(expandImages(body, images)).toBe(stored)
+  })
+
   it('leaves unknown tokens unexpanded and never reads data URIs typed as text', () => {
     expect(expandImages('![x](embedded:9)', [])).toBe('![x](embedded:9)')
   })

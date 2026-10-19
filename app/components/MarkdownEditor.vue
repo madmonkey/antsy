@@ -72,6 +72,10 @@ function remove(id: number) {
   emit('update:images', props.images.filter(i => i.id !== id))
 }
 
+function setStore(id: number, store: boolean) {
+  emit('update:images', props.images.map(i => i.id === id ? { ...i, store } : i))
+}
+
 const replacing = ref<number | null>(null)
 async function onReplace(e: Event) {
   const input = e.target as HTMLInputElement
@@ -84,7 +88,7 @@ async function onReplace(e: Event) {
   const result = checkImage(bytes, totalBytes(others))
   if (!result.ok) { message.value = result.message; return }
   message.value = ''
-  emit('update:images', props.images.map(i => i.id === id ? { id, dataUri: toDataUri(bytes, result.mime), bytes: bytes.length } : i))
+  emit('update:images', props.images.map(i => i.id === id ? { id, dataUri: toDataUri(bytes, result.mime), bytes: bytes.length, store: !!i.url || i.store } : i))
 }
 const replaceInput = ref<HTMLInputElement | null>(null)
 function startReplace(id: number) {
@@ -131,7 +135,11 @@ function startReplace(id: number) {
         <label class="flex items-center gap-1 text-sm">Alt text
           <input :value="altOf(img.id)" class="rounded border border-default px-1" :data-test="`alt-${img.id}`" @input="setAlt(img.id, ($event.target as HTMLInputElement).value)">
         </label>
-        <UButton :label="coverId === img.id ? 'Cover image ✓' : 'Use as cover'" size="xs" :variant="coverId === img.id ? 'solid' : 'outline'" :data-test="`cover-${img.id}`" @click="emit('update:coverId', coverId === img.id ? null : img.id)" />
+        <UButton :label="coverId === img.id ? 'Cover image ✓' : 'Set as cover'" size="xs" :variant="coverId === img.id ? 'solid' : 'outline'" :data-test="`cover-${img.id}`" @click="emit('update:coverId', coverId === img.id ? null : img.id)" />
+        <label class="flex items-center gap-1 text-sm">
+          <input type="checkbox" :checked="!!img.store || coverId === img.id" :disabled="coverId === img.id" :data-test="`store-${img.id}`" @change="setStore(img.id, ($event.target as HTMLInputElement).checked)">
+          Save to Supabase
+        </label>
         <UButton label="Replace" size="xs" variant="outline" @click="startReplace(img.id)" />
         <UButton label="Remove" size="xs" variant="outline" color="error" @click="remove(img.id)" />
       </li>

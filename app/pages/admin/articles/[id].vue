@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue'
 import {
-  deleteArticle, getAdminArticle, listAdminTopics, saveArticle, uploadArticleImage, type AdminTopic, type WriteFailure
+  deleteArticle, deleteArticleImages, getAdminArticle, listAdminTopics, reembedImage, saveArticle, uploadArticleImage, type AdminTopic, type WriteFailure
 } from '~/composables/useAdminContent'
 import { collapseImages, expandImages, type EmbeddedImage } from '~/utils/embed-image'
 import { isValidSlug, makeExcerpt, slugify } from '~/utils/excerpt'
@@ -21,6 +21,8 @@ const tags = ref<string[]>([])
 const images = ref<EmbeddedImage[]>([])
 const coverId = ref<number | null>(null)
 const coverUrl = ref('')
+// Files in storage when the article was loaded or last saved, so unused ones can be removed.
+let storedUrls = new Set<string>()
 watch(images, (list) => { if (coverId.value !== null && !list.some(i => i.id === coverId.value)) coverId.value = null })
 const published = ref(false)
 const publishedAt = ref<string | null>(null)
@@ -52,6 +54,8 @@ onMounted(async () => {
       const c = collapseImages(a.body)
       body.value = c.body
       images.value = c.images
+      storedUrls = new Set([...c.images.map(i => i.url), a.cover_image].filter((u): u is string => !!u))
+      coverId.value = c.images.find(i => i.url && i.url === a.cover_image)?.id ?? null
       published.value = !!a.published_at
       publishedAt.value = a.published_at
       slugTouched.value = true
@@ -85,26 +89,29 @@ async function save() {
   if (!body.value.trim()) return fail({ kind: 'field', field: 'body', message: 'Enter the article text.' })
   if (!form.topic_id) return fail({ kind: 'other', message: 'Create a topic first.' })
   // shortcut: last write wins, add a version check if concurrent admins appear
-  let finalBody = body.value
-  let finalImages = images.value
-  let cover = coverUrl.value
-  const pick = images.value.find(i => i.id === coverId.value)
-  if (pick) {
-    const up = await uploadArticleImage(pick.dataUri)
-    if ('error' in up) return fail({ kind: 'other', message: up.error })
-    cover = up.url
-    // Swap the embedded copy for the stored file so the article text stays small.
-    finalBody = finalBody.replace(new RegExp(`\\]\\(embedded:${pick.id}\\)`, 'g'), `](${up.url})`)
-    finalImages = images.value.filter(i => i.id !== pick.id)
+  const list: EmbeddedImage[] = []
+  for (const img of images.value) {
+    const wantStore = !!img.store || img.id === coverId.value
+    if (wantStore && !img.url) {
+      const up = await uploadArticleImage(img.dataUri)
+      if ('error' in up) { images.value = [...list, ...images.value.slice(list.length)]; return fail({ kind: 'other', message: up.error }) }
+      list.push({ ...img, url: up.url, store: true })
+    } else if (!wantStore && img.url) {
+      const back = await reembedImage(img.url)
+      if ('error' in back) { images.value = [...list, ...images.value.slice(list.length)]; return fail({ kind: 'other', message: back.error }) }
+      list.push({ ...img, ...back, url: undefined, store: false })
+    } else {
+      list.push(img)
+    }
   }
-  const f = await saveArticle(id, { ...form, tags: normaliseTags(tags.value), excerpt: makeExcerpt(body.value), body: expandImages(finalBody, finalImages), cover_image: cover || null })
+  images.value = list
+  const cover = list.find(i => i.id === coverId.value)?.url ?? (coverId.value === null ? coverUrl.value : '')
+  const f = await saveArticle(id, { ...form, tags: normaliseTags(tags.value), excerpt: makeExcerpt(body.value), body: expandImages(body.value, list), cover_image: cover || null })
   if (f) return fail(f)
-  if (pick) {
-    body.value = finalBody
-    images.value = finalImages
-    coverUrl.value = cover
-    coverId.value = null
-  }
+  const keep = new Set([...list.map(i => i.url), cover].filter((u): u is string => !!u))
+  await deleteArticleImages([...storedUrls].filter(u => !keep.has(u)))
+  storedUrls = keep
+  coverUrl.value = cover
   saved.value = true
   if (!id) await navigateTo('/admin')
 }
@@ -153,7 +160,7 @@ const fieldError = (f: string) => (failure.value?.field === f ? failure.value.me
       </label>
       <p v-if="fieldError('tags')" role="alert" class="text-error" data-test="error-tags">{{ fieldError('tags') }}</p>
       <MarkdownEditor v-model="body" v-model:images="images" v-model:cover-id="coverId" />
-      <p v-if="coverUrl" class="flex items-center gap-2 text-sm" data-test="current-cover">
+      <p v-if="coverUrl && coverId === null" class="flex items-center gap-2 text-sm" data-test="current-cover">
         <img :src="coverUrl" alt="" class="h-10 w-10 rounded object-cover">
         Cover image (used for link previews)
         <button type="button" class="underline" @click="coverUrl = ''">Remove</button>
