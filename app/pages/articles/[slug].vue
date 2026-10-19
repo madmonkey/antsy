@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { fetchArticleBySlug } from '~/composables/useArticles'
+import { absoluteUrl, firstImage } from '~/utils/share'
 
 const slug = useRoute().params.slug as string
 
@@ -7,9 +8,25 @@ const { data: article, error, refresh } = await useAsyncData(`article-${slug}`, 
 if (!error.value && !article.value) throw createError({ statusCode: 404, statusMessage: 'Article not found', fatal: true })
 onNuxtReady(() => refresh()) // onMounted fires while hydrating, when refresh() returns the cached payload
 
+const config = useRuntimeConfig()
+const siteBase = `${String(config.public.siteUrl).replace(/\/$/, '')}${config.app.baseURL}`
+const { site } = useAppConfig()
+const shareImage = computed(() => absoluteUrl(firstImage(article.value?.body ?? '') ?? site.avatar, siteBase))
+const shareDescription = computed(() => article.value?.excerpt || article.value?.title || '')
+
 useSeoMeta({
   title: () => article.value?.title ?? 'Article',
-  description: () => article.value?.excerpt || article.value?.title || ''
+  description: shareDescription,
+  ogType: 'article',
+  ogSiteName: site.name,
+  ogTitle: () => article.value?.title ?? 'Article',
+  ogDescription: shareDescription,
+  ogImage: shareImage,
+  ogUrl: `${siteBase}articles/${slug}/`,
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => article.value?.title ?? 'Article',
+  twitterDescription: shareDescription,
+  twitterImage: shareImage
 })
 </script>
 

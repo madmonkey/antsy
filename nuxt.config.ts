@@ -36,6 +36,7 @@ export default defineNuxtConfig({
       supabaseUrl: '',
       supabasePublishableKey: '',
       turnstileSiteKey: '',
+      siteUrl: 'https://madmonkey.github.io',
       analyticsProvider: '',
       analyticsId: '',
       analyticsHost: '',
