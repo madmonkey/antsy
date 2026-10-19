@@ -39,16 +39,10 @@ describe('ThemeToggle', () => {
 describe('SiteHeader', () => {
   beforeEach(() => { isAdmin.mockReset().mockResolvedValue(false) })
 
-  it('renders safe, labelled social links and the toggle', () => {
-    social.value = [{ platform: 'github', label: 'GitHub', url: 'https://github.com/x' }, { platform: 'bluesky', label: 'Bluesky', url: 'https://bsky.app/' }]
+  it('keeps social links out of the header and shows the toggle', () => {
+    social.value = [{ platform: 'github', label: 'GitHub', url: 'https://github.com/x' }]
     const w = mount(SiteHeader, { global: { stubs } })
-    const links = w.findAll('[data-test=social-links] a')
-    expect(links).toHaveLength(2)
-    for (const a of links) {
-      expect(a.attributes('target')).toBe('_blank')
-      expect(a.attributes('rel')).toBe('noopener noreferrer')
-      expect(a.attributes('aria-label')).toBeTruthy()
-    }
+    expect(w.find('[data-test=social-links]').exists()).toBe(false)
     expect(w.find('[data-test=theme-toggle]').exists() || w.find('button').exists()).toBe(true)
   })
 
