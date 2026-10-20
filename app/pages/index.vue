@@ -37,6 +37,6 @@ onNuxtReady(() => refresh()) // onMounted fires while hydrating, when refresh() 
       </StateMessage>
     </section>
     <RecentArticles class="order-1 lg:order-2" />
-    <AboutMe class="order-3" />
+    <HomeSections class="order-3" />
   </div>
 </template>
