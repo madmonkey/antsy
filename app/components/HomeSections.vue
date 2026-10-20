@@ -3,7 +3,7 @@
 const { site } = useAppConfig()
 const sections = computed(() => [
   { id: 'privacy', title: 'Privacy', icon: 'i-lucide-venetian-mask', text: site.privacy, link: { to: '/privacy', label: 'Read the full privacy notice' } },
-  { id: 'thanks', title: 'Thanks', icon: 'i-lucide-wine', text: site.thanks.text, tip: site.thanks.tipUrl },
+  { id: 'thanks', title: 'Thanks', icon: 'i-mdi-whiskey', text: site.thanks.text, tip: site.thanks.tipUrl },
   { id: 'about', title: 'About me', icon: 'i-lucide-user', text: site.about }
 ])
 </script>
@@ -13,8 +13,7 @@ const sections = computed(() => [
     <details
       v-for="(s, i) in sections"
       :key="s.id"
-      class="group w-full max-w-md rounded border border-default"
-      :class="i % 2 ? 'ml-auto' : 'mr-auto'"
+      class="group w-full rounded border border-default"
       :data-test="`section-${s.id}`"
     >
       <summary class="flex cursor-pointer list-none items-center gap-2 p-3 font-semibold" :class="i % 2 ? 'flex-row-reverse text-right' : ''">
@@ -29,7 +28,7 @@ const sections = computed(() => [
         <NuxtLink v-if="s.link" :to="s.link.to" class="underline">
           {{ s.link.label }}
         </NuxtLink>
-        <UButton v-if="s.tip" :to="s.tip" target="_blank" rel="noopener noreferrer" icon="i-lucide-wine" label="Buy me a whiskey" size="sm" />
+        <UButton v-if="s.tip" :to="s.tip" target="_blank" rel="noopener noreferrer" icon="i-mdi-whiskey" label="Buy me a whiskey" size="sm" />
       </div>
     </details>
   </div>

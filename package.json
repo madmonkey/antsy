@@ -33,6 +33,7 @@
     "vue-router": "^4.0.0 || ^5.0.0"
   },
   "devDependencies": {
+    "@iconify-json/mdi": "^1.2.3",
     "@nuxt/eslint": "^1.0.0",
     "@playwright/test": "^1.50.0",
     "@tiptap/y-tiptap": "^3.0.9",
