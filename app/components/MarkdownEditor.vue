@@ -114,7 +114,7 @@ function startReplace(id: number) {
     <p v-if="message" role="alert" class="text-sm text-error" data-test="editor-message">
       {{ message }}
     </p>
-    <div class="grid gap-4 md:grid-cols-2">
+    <div class="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
       <textarea
         ref="area"
         :value="modelValue"
@@ -129,19 +129,25 @@ function startReplace(id: number) {
       <!-- eslint-disable-next-line vue/no-v-html -->
       <div class="article-body overflow-auto rounded border border-default p-2" aria-label="Preview" data-test="editor-preview" v-html="html" />
     </div>
-    <ul v-if="images.length" class="space-y-1">
-      <li v-for="img in images" :key="img.id" class="flex items-center gap-2" data-test="image-row">
-        <img :src="img.dataUri" alt="" class="h-8 w-8 object-cover">
-        <label class="flex items-center gap-1 text-sm">Alt text
-          <input :value="altOf(img.id)" class="rounded border border-default px-1" :data-test="`alt-${img.id}`" @input="setAlt(img.id, ($event.target as HTMLInputElement).value)">
-        </label>
-        <UButton :label="coverId === img.id ? 'Cover image ✓' : 'Set as cover'" size="xs" :variant="coverId === img.id ? 'solid' : 'outline'" :data-test="`cover-${img.id}`" @click="emit('update:coverId', coverId === img.id ? null : img.id)" />
-        <label class="flex items-center gap-1 text-sm">
-          <input type="checkbox" :checked="!!img.store || coverId === img.id" :disabled="coverId === img.id" :data-test="`store-${img.id}`" @change="setStore(img.id, ($event.target as HTMLInputElement).checked)">
-          Save to Supabase
-        </label>
-        <UButton label="Replace" size="xs" variant="outline" @click="startReplace(img.id)" />
-        <UButton label="Remove" size="xs" variant="outline" color="error" @click="remove(img.id)" />
+    <ul v-if="images.length" class="space-y-2">
+      <li v-for="img in images" :key="img.id" class="space-y-1 rounded border border-default p-2" data-test="image-row">
+        <div class="flex items-center gap-2">
+          <img :src="img.dataUri" alt="" class="size-8 shrink-0 object-cover">
+          <input :value="altOf(img.id)" placeholder="Alt text" aria-label="Alt text" class="min-w-0 flex-1 rounded border border-default px-1" :data-test="`alt-${img.id}`" @input="setAlt(img.id, ($event.target as HTMLInputElement).value)">
+        </div>
+        <div class="flex items-center gap-2">
+          <UButton
+            icon="i-lucide-image" size="xs" :variant="coverId === img.id ? 'solid' : 'outline'"
+            :aria-label="coverId === img.id ? 'Cover image (selected)' : 'Set as cover'" :title="coverId === img.id ? 'Cover image (selected)' : 'Set as cover'"
+            :data-test="`cover-${img.id}`" @click="emit('update:coverId', coverId === img.id ? null : img.id)"
+          />
+          <label class="flex items-center gap-1 text-sm" title="Save to Supabase">
+            <input type="checkbox" aria-label="Save to Supabase" :checked="!!img.store || coverId === img.id" :disabled="coverId === img.id" :data-test="`store-${img.id}`" @change="setStore(img.id, ($event.target as HTMLInputElement).checked)">
+            <UIcon name="i-lucide-cloud-upload" class="size-4" />
+          </label>
+          <UButton icon="i-lucide-refresh-cw" size="xs" variant="outline" aria-label="Replace image" title="Replace image" @click="startReplace(img.id)" />
+          <UButton icon="i-lucide-trash-2" size="xs" variant="outline" color="error" aria-label="Remove image" title="Remove image" @click="remove(img.id)" />
+        </div>
       </li>
     </ul>
   </div>
