@@ -9,7 +9,7 @@ export default defineAppConfig({
     privacy: 'No ads, no tracking cookies and no profiling. Visits are counted with a privacy-focused tool that stores no personal data. Comments need a sign-in, and I keep only your display name and email for that. Passwords are never stored by this site.',
     thanks: {
       text: 'Thanks for reading. If something here made you laugh, think or swear, you can say thanks with a whiskey.',
-      tipUrl: ''
+      tipUrl: 'https://ko-fi.com/fckerydetected'
     },
     social: [
       { platform: 'github', label: 'GitHub', url: 'https://github.com/madmonkey' },
