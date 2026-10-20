@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useAdminSession } from '~/composables/useAdminSession'
+import { getReader, onReaderChange, signOut } from '~/composables/useComments'
 
-defineProps<{ width?: string }>()
+defineProps<{ width?: string, hideSignOut?: boolean }>()
 const { site } = useAppConfig()
 const isAdmin = ref(false)
+const signedIn = ref(false)
+let stop: (() => void) | undefined
 
 onMounted(async () => {
   try {
@@ -12,7 +15,19 @@ onMounted(async () => {
   } catch {
     isAdmin.value = false
   }
+  try {
+    signedIn.value = (await getReader()).status !== 'signed-out'
+    stop = await onReaderChange((s) => { signedIn.value = s.status !== 'signed-out' })
+  } catch {
+    signedIn.value = false
+  }
 })
+onBeforeUnmount(() => stop?.())
+
+async function leave() {
+  await signOut()
+  isAdmin.value = false
+}
 
 const avatarSrc = computed(() => {
   const avatar = site.avatar
@@ -53,6 +68,7 @@ const avatarSrc = computed(() => {
       <div class="flex items-center gap-1">
         <SearchBox />
         <ThemeToggle />
+        <UButton v-if="signedIn && !hideSignOut" icon="i-lucide-power" variant="ghost" color="error" aria-label="Sign out" title="Sign out" data-test="header-signout" @click="leave" />
         <slot />
       </div>
     </div>

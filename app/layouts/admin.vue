@@ -18,7 +18,7 @@ async function signOut() {
         <UButton icon="i-lucide-power" variant="ghost" color="error" class="ml-auto" aria-label="Sign out" title="Sign out" @click="signOut" />
       </div>
     </nav>
-    <SiteHeader width="max-w-5xl" />
+    <SiteHeader width="max-w-5xl" hide-sign-out />
     <main class="mx-auto min-w-0 max-w-5xl p-3 sm:p-6">
       <slot />
     </main>
